@@ -16,7 +16,8 @@ extension = Extension('espeak_ng',
                       # TODO: Walk file tree for this
                       sources=[path.join('src','espeak_ng','extension','espeakngmodule.c')],
                       include_dirs=[path.join('espeak-ng', 'src', 'include')],
-                      library_dirs=[path.join('espeak-ng', 'src', '.libs')],
+                      # library_dirs=[path.join('espeak-ng', 'src', '.libs')],
+                      library_dirs=[path.join('/usr','local','lib')],
                       libraries=['espeak-ng'])
 
 setup(ext_modules=[extension])
