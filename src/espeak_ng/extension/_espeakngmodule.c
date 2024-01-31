@@ -3,11 +3,21 @@
 
 #include "espeak/speak_lib.h"
 
+
+// Python function handle to be executed during synthesization
+static PyObject *SynthCallback = NULL;
+
 // Proxy callback that will handle calling the user-specified Python callback
 // TODO: Experiment with 'wave' file (I think it's for RETRIEVAL)
 // TODO: Multiple callbacks? Not sure if this is useful...
 int espeak_ng_proxy_callback(short* wave, int num_samples, espeak_EVENT* event)
 {
+    /* PyErr_SetString(PyExc_RuntimeError, "EXPLODE!"); */
+    /* return NULL; // Throw exception */
+    
+    /* // TODO: Whaaaaaat */
+    /* PyObject *res = PyObject_CallFunction(SynthCallback, ""); */
+
     // TODO: Call the callable
     printf("Callback ran.\n");
     return 0;
@@ -20,7 +30,7 @@ espeak_ng_py_Synth(PyObject *self, PyObject *args)
     char hello[] = "Hi\0";
     // TODO: Should take type espeak_ERROR
     int res = espeak_Synth(&hello, 2, 0, POS_CHARACTER, 0, 0, NULL, NULL);
-    printf("Synth failed! CODE: %d\n", res);
+    printf("\nSynth failed! CODE: %d\n", res);
     if (res != EE_OK) {
 	Py_RETURN_FALSE;
     }
@@ -95,7 +105,7 @@ espeak_ng_py_Initialize(PyObject *self, PyObject *args, PyObject *kwargs)
 	return NULL; // Throw exception (it's already set)
 
     if (path != NULL && access(path, F_OK) == -1) {
-	PyErr_SetString(PyExc_RuntimeError, "_espeak_ng.initialize(): path is invalid");
+	PyErr_SetString(PyExc_RuntimeError, "espeak_ng_py_Initialize: Path parameter is invalid");
 	return NULL; // Throw exception
     }
 
@@ -105,8 +115,8 @@ espeak_ng_py_Initialize(PyObject *self, PyObject *args, PyObject *kwargs)
     // res is either sample rate in Hz, or -1 (EE_INTERNAL_ERROR)
     if (res != -1) {
 	espeak_SetSynthCallback(espeak_ng_proxy_callback);
-	// TODO: Probably shouldn't be set here...Should be kept in Python world
-	// espeak_ng_py_SetVoiceByProperties(NULL, NULL, NULL);
+	/* // TODO: Probably shouldn't be set here...Should be kept in Python world */
+	/* espeak_ng_py_SetVoiceByProperties(); */
 
 	// Returns sampling rate in Hz
 	PyObject *res_py = Py_BuildValue("i", res);
@@ -118,19 +128,35 @@ espeak_ng_py_Initialize(PyObject *self, PyObject *args, PyObject *kwargs)
     }
 }
 
-// Pass it a function pointer...Interesting. I guess we need to parse args and find the pointer then?
 static PyObject *
 espeak_ng_py_SetSynthCallback(PyObject *self, PyObject *args)
 {
-    // Parse out callback
-    // Verify it is callable
-    // Store it and call within proxy callback
+    // TODO: Is it better to make this static (could get wonky though
+    // if PyArg_ doesn't set it every time)
+    PyObject *callback = NULL;
+
+    // TODO: Test that "O" is what we think it is
+    if (!PyArg_ParseTuple(args, "O", &callback))
+	return NULL; // Throw exception (it's already set)
+
+    if (!PyCallable_Check(callback)) {
+	PyErr_SetString(PyExc_TypeError, "espeak_ng_py_SetSynthCallback: Expected parameter to be callable");
+	return NULL; // Throw exception
+    }
+    // TODO: Expect that the callback accept certain params?
+
+    // If successful, store callback
+    Py_CLEAR(SynthCallback); // Remove old callback (if it exists)
+    SynthCallback = callback;
+
+    Py_RETURN_NONE;
 }
 
 // Module methods
 static PyMethodDef EspeakNgMethods[] = {
     {"initialize", espeak_ng_py_Initialize, METH_VARARGS | METH_KEYWORDS, "configure speech synthesizer"},
     {"set_voice_by_properties", espeak_ng_py_SetVoiceByProperties, METH_VARARGS | METH_KEYWORDS, "set voice by properties"},
+    {"set_synth_callback", espeak_ng_py_SetSynthCallback, METH_VARARGS, "set synth callback"},
     {"synth", espeak_ng_py_Synth, METH_VARARGS, "synthesize text to speech"},
     {"list_voices", espeak_ng_py_ListVoices, METH_VARARGS, "list all available voices"},
     {NULL, NULL, 0, NULL} // Sentinel
