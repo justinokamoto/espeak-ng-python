@@ -1,6 +1,9 @@
+import os
 from os import path
 from setuptools import setup, Extension
 import subprocess
+
+# TODO: Learn distribution of wheel files (for MacOS, Linux, etc.)
 
 # TODO: Warn about submodules missing?
 # TODO: Build espeak-ng submodule?
@@ -12,12 +15,11 @@ import distutils
 
 distutils.log.set_verbosity(1)
 
-extension = Extension('espeak_ng',
-                      # TODO: Walk file tree for this
-                      sources=[path.join('src','espeak_ng','extension','espeakngmodule.c')],
+extension = Extension('_espeak_ng',
+                      # TODO: Walk file tree for these files?
+                      sources=[path.join('src','espeak_ng','extension','_espeakngmodule.c')],
                       include_dirs=[path.join('espeak-ng', 'src', 'include')],
-                      # library_dirs=[path.join('espeak-ng', 'src', '.libs')],
-                      library_dirs=[path.join('/usr','local','lib')],
-                      libraries=['espeak-ng'])
+                      library_dirs=[path.join(os.sep, 'opt','homebrew','lib')],
+                      libraries=['espeak'])
 
 setup(ext_modules=[extension])

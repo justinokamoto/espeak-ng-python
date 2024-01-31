@@ -10,6 +10,10 @@ TODO: Need __init__.py to implement all defaults
 TODO: Test everything
 
 TODO: Make hack for 3rd party lib:
+
+TODO: Docstrings
+
+TODO: Describe the different responsibilities of \_espeak\_ng and espeak\_ng
 ```
 install_name_tool -change /usr/lib/libpcaudio.0.dylib /usr/local/lib/libpcaudio.0.dylib /Users/justin/workspaces/espeak-ng-python/espeak-ng/src/.libs/espeak-ng
 ```
