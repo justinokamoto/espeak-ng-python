@@ -12,11 +12,7 @@ static PyObject *SynthCallback = NULL;
 // TODO: Multiple callbacks? Not sure if this is useful...
 int espeak_ng_proxy_callback(short* wave, int num_samples, espeak_EVENT* event)
 {
-    /* PyErr_SetString(PyExc_RuntimeError, "EXPLODE!"); */
-    /* return NULL; // Throw exception */
-    
-    /* // TODO: Whaaaaaat */
-    /* PyObject *res = PyObject_CallFunction(SynthCallback, ""); */
+    PyObject *res = PyObject_CallFunction(SynthCallback, NULL);
 
     // TODO: Call the callable
     printf("Callback ran.\n");
@@ -29,15 +25,13 @@ espeak_ng_py_Synth(PyObject *self, PyObject *args)
     // TODO: Parse out options like speech string
     char hello[] = "Hi\0";
     // TODO: Should take type espeak_ERROR
-    int res = espeak_Synth(&hello, 2, 0, POS_CHARACTER, 0, 0, NULL, NULL);
+    int res = espeak_Synth(&hello, 20, 0, POS_CHARACTER, 0, 0, NULL, NULL);
     printf("\nSynth failed! CODE: %d\n", res);
     if (res != EE_OK) {
 	Py_RETURN_FALSE;
     }
     Py_RETURN_TRUE;
 }
-
-// TODO: SET VOICE PROPERTIES!!!!!!!!!!!!!!!!!! (Or is it needed?)
 
 static PyObject *
 espeak_ng_py_SetVoiceByProperties(PyObject *self, PyObject *args, PyObject *kwargs)
@@ -110,13 +104,13 @@ espeak_ng_py_Initialize(PyObject *self, PyObject *args, PyObject *kwargs)
     }
 
     // TODO: Make sure this cast is safe! (case switch enums or < >)
-    int res = espeak_Initialize((espeak_AUDIO_OUTPUT) output, buflength, path, options);
+    // TODO: This blows up when another option is set
+    // TODO: Don't hardcode this stuff
+    int res = espeak_Initialize(AUDIO_OUTPUT_SYNCH_PLAYBACK, 400, NULL, 0);
 
     // res is either sample rate in Hz, or -1 (EE_INTERNAL_ERROR)
     if (res != -1) {
 	espeak_SetSynthCallback(espeak_ng_proxy_callback);
-	/* // TODO: Probably shouldn't be set here...Should be kept in Python world */
-	/* espeak_ng_py_SetVoiceByProperties(); */
 
 	// Returns sampling rate in Hz
 	PyObject *res_py = Py_BuildValue("i", res);
@@ -128,6 +122,7 @@ espeak_ng_py_Initialize(PyObject *self, PyObject *args, PyObject *kwargs)
     }
 }
 
+// TODO: In python, test that a function is passed (or use "O" format str?)
 static PyObject *
 espeak_ng_py_SetSynthCallback(PyObject *self, PyObject *args)
 {
@@ -135,7 +130,6 @@ espeak_ng_py_SetSynthCallback(PyObject *self, PyObject *args)
     // if PyArg_ doesn't set it every time)
     PyObject *callback = NULL;
 
-    // TODO: Test that "O" is what we think it is
     if (!PyArg_ParseTuple(args, "O", &callback))
 	return NULL; // Throw exception (it's already set)
 
