@@ -5,6 +5,7 @@
 
 // Proxy callback that will handle calling the user-specified Python callback
 // TODO: Experiment with 'wave' file (I think it's for RETRIEVAL)
+// TODO: Multiple callbacks? Not sure if this is useful...
 int espeak_ng_proxy_callback(short* wave, int num_samples, espeak_EVENT* event)
 {
     // TODO: Call the callable
@@ -16,9 +17,9 @@ static PyObject *
 espeak_ng_py_Synth(PyObject *self, PyObject *args)
 {
     // TODO: Parse out options like speech string
-    char hello[] = "Hello, world. It is I, Justin Okamoto.\0";
+    char hello[] = "Hi\0";
     // TODO: Should take type espeak_ERROR
-    int res = espeak_Synth(&hello, 39, 0, POS_CHARACTER, 0, 0, NULL, NULL);
+    int res = espeak_Synth(&hello, 2, 0, POS_CHARACTER, 0, 0, NULL, NULL);
     printf("Synth failed! CODE: %d\n", res);
     if (res != EE_OK) {
 	Py_INCREF(Py_False);
@@ -72,32 +73,41 @@ espeak_ng_py_ListVoices(PyObject *sef, PyObject *args)
     }
     return py_list;
 }
-   
 
 static PyObject *
-espeak_ng_py_Initialize(PyObject *self, PyObject *args)
+espeak_ng_py_Initialize(PyObject *self, PyObject *args, PyObject *kwargs)
 {
-    // TODO: Have initialization values be customizable
-    // TODO: Is it better to automatically use synchronous mode?
-    // TODO: What is buflength doing?
-    int res = espeak_Initialize(AUDIO_OUTPUT_SYNCH_PLAYBACK, // plays audio in synchronous mode
-				400,                         // buffer length
-				NULL,                        // default data directory
-				0);                          // no flags
-    if (res) {
-	espeak_SetSynthCallback(espeak_ng_proxy_callback);
-	// TODO: Fix setting the voice
-	 // TODO: Probably shouldn't be set here...Should be kept in Python world
-	/* if (espeak_ng_py_SetVoiceByProperties(NULL, NULL) != 0) { */
-	/*     Py_INCREF(Py_False); */
-	/*     return Py_False; */
-	/* } */
+    const char *path = NULL;
+    int output, buflength, options;
 
-	Py_INCREF(Py_True);
-	return Py_True;
+    // TODO: path= keyword doesn't work...?
+    static char *kwlist[] = {"output", "buflength", "options", "path", NULL};
+
+    if (!PyArg_ParseTupleAndKeywords(args, kwargs, "iii|s", kwlist,
+				     &output, &buflength, &options, &path))
+	return NULL; // Throw exception (it's already set)
+
+    if (path != NULL && access(path, F_OK) == -1) {
+	PyErr_SetString(PyExc_RuntimeError, "_espeak_ng.initialize(): path is invalid");
+	return NULL; // Throw exception
+    }
+
+    // TODO: Make sure this cast is safe! (case switch enums or < >)
+    int res = espeak_Initialize((espeak_AUDIO_OUTPUT) output, buflength, path, options);
+
+    // res is either sample rate in Hz, or -1 (EE_INTERNAL_ERROR)
+    if (res != -1) {
+	espeak_SetSynthCallback(espeak_ng_proxy_callback);
+	// TODO: Probably shouldn't be set here...Should be kept in Python world
+	espeak_ng_py_SetVoiceByProperties(NULL, NULL);
+
+	// Returns sampling rate in Hz
+	PyObject *res_py = Py_BuildValue("i", res);
+	return res_py;
     } else {
-	Py_INCREF(Py_False);
-	return Py_False;
+	// TODO: decrement?
+	PyObject *res_py = Py_BuildValue("i", res);
+	return res_py;
     }
 }
 
@@ -121,15 +131,15 @@ static PyMethodDef EspeakNgMethods[] = {
 // Module definition
 static struct PyModuleDef espeakngmodule = {
     PyModuleDef_HEAD_INIT,
-    "espeak_ng",    // name
-    NULL,           // module documentation
-    -1,             // -1 since the module keeps state in global variables
+    "_espeak_ng",    // name
+    NULL,            // module documentation
+    -1,              // -1 since the module keeps state in global variables
     EspeakNgMethods
 };
 
 // Module initialization
 PyMODINIT_FUNC
-PyInit_espeak_ng(void)
+PyInit__espeak_ng(void)
 {
     // Cannot initialize! Requires module (duh!)
     // espeak_ng_py_initialize();
