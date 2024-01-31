@@ -38,7 +38,7 @@ class Test__EspeakNg(unittest.TestCase):
         assert espeak_ng.set_voice_by_properties(age=voice["age"])
         assert espeak_ng.set_voice_by_properties(variant=voice["variant"])
 
-    def test_set_synth_callback(self):
+    def test_set_synth(self):
         mock_callback = mock.Mock()
 
         self.assertRaises(TypeError, espeak_ng.set_synth_callback)
@@ -47,7 +47,11 @@ class Test__EspeakNg(unittest.TestCase):
         # Set callback to mock
         espeak_ng.set_synth_callback(mock_callback)
 
+        # Assert synth works
         assert espeak_ng.synth("hello")
-        # Remove this!
-        time.sleep(4)
+        
+        time.sleep(4) # Remove this! Parse sentinel in callback to
+                      # know when synth has completed.
+
+        # Assert that callback is being triggered
         mock_callback.assert_called()

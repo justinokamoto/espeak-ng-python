@@ -3,6 +3,10 @@
 
 #include "espeak/speak_lib.h"
 
+// TODO: Test...Do default values get overwritten in parsing, even if arg is a
+// keyword with no value provided?
+
+// TODO: Create error enum that can be interpretted
 
 // Python function handle to be executed during synthesization
 static PyObject *SynthCallback = NULL;
@@ -22,11 +26,29 @@ int espeak_ng_proxy_callback(short* wave, int num_samples, espeak_EVENT* event)
 static PyObject *
 espeak_ng_py_Synth(PyObject *self, PyObject *args)
 {
+    // Null-terminated text to be spoken
+    const void *text;
+    // Equal-or-greater than size of text data
+    size_t size; // TODO: Get this from the string length
+    // Position to start speaking
+    unsigned int position = 0;
+    // Determines whether 'position' denotes chars, words, or sentences.
+    espeak_POSITION_TYPE position_type = POS_CHARACTER;
+    // Position to end speaking. 0 signifies no end.
+    unsigned int end_position = 0;
+    unsigned int flags = espeakCHARS_AUTO;
+    unsigned int *unique_identifier = NULL;
+    void *user_data = NULL;
+
+    static char *kwlist[] = {"size", "position", "position_type", "end_position", "flags", "unique_identifier", "user_data"};
+
     // TODO: Parse out options like speech string
     char hello[] = "Hi\0";
     // TODO: Should take type espeak_ERROR
     int res = espeak_Synth(&hello, 20, 0, POS_CHARACTER, 0, 0, NULL, NULL);
     printf("\nSynth failed! CODE: %d\n", res);
+
+    // TODO: _Should_ return an error
     if (res != EE_OK) {
 	Py_RETURN_FALSE;
     }
