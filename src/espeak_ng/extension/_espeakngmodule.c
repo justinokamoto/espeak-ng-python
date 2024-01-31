@@ -33,8 +33,8 @@ static PyObject *
 espeak_ng_py_SetVoiceByProperties(PyObject *self, PyObject *args, PyObject *kwargs)
 {
     // TODO: Create Python wrapper class around espeak_VOICE
-    const char *name="default";
-    const char *languages="en";
+    const char *name=NULL;
+    const char *languages=NULL;
     int gender=0, age=0, variant=0;
 
     static char *kwlist[] = {"name", "languages", "gender", "age", "variant", NULL};
