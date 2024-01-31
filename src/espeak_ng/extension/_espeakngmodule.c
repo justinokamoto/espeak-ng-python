@@ -22,33 +22,41 @@ espeak_ng_py_Synth(PyObject *self, PyObject *args)
     int res = espeak_Synth(&hello, 2, 0, POS_CHARACTER, 0, 0, NULL, NULL);
     printf("Synth failed! CODE: %d\n", res);
     if (res != EE_OK) {
-	Py_INCREF(Py_False);
-	return Py_False;
+	Py_RETURN_FALSE;
     }
-    Py_INCREF(Py_True);
-    return Py_True;
+    Py_RETURN_TRUE;
 }
 
+// TODO: SET VOICE PROPERTIES!!!!!!!!!!!!!!!!!! (Or is it needed?)
+
 static PyObject *
-espeak_ng_py_SetVoiceByProperties(PyObject *self, PyObject *args)
+espeak_ng_py_SetVoiceByProperties(PyObject *self, PyObject *args, PyObject *kwargs)
 {
-    // TODO: Parse out options
+    // TODO: Create Python wrapper class around espeak_VOICE
+    const char *name="default";
+    const char *languages="en";
+    int gender=0, age=0, variant=0;
+
+    static char *kwlist[] = {"name", "languages", "gender", "age", "variant", NULL};
+
+    if (!PyArg_ParseTupleAndKeywords(args, kwargs, "|ssiii", kwlist,
+				     &name, &languages, &gender, &age, &variant))
+	return NULL; // Throw exception (it's already set)
+
     espeak_ERROR res;
     espeak_VOICE voice_spec;
-    voice_spec.name = "default";
-    voice_spec.languages = "en";
-    voice_spec.gender = 0;
-    voice_spec.age = 0;
-    voice_spec.variant = 0;
+    voice_spec.name = name;
+    voice_spec.languages = languages;
+    voice_spec.gender = gender;
+    voice_spec.age = age;
+    voice_spec.variant = variant;
 
     res = espeak_SetVoiceByProperties(&voice_spec);
 
     if (res != EE_OK) {
-	Py_INCREF(Py_False);
-	return Py_False;
+	Py_RETURN_FALSE;
     }
-    Py_INCREF(Py_True);
-    return Py_True;
+    Py_RETURN_TRUE;
 }
 
 static PyObject *
@@ -78,12 +86,11 @@ static PyObject *
 espeak_ng_py_Initialize(PyObject *self, PyObject *args, PyObject *kwargs)
 {
     const char *path = NULL;
-    int output, buflength, options;
+    int output=0, buflength=0, options=0;
 
-    // TODO: path= keyword doesn't work...?
     static char *kwlist[] = {"output", "buflength", "options", "path", NULL};
 
-    if (!PyArg_ParseTupleAndKeywords(args, kwargs, "iii|s", kwlist,
+    if (!PyArg_ParseTupleAndKeywords(args, kwargs, "|iiis", kwlist,
 				     &output, &buflength, &options, &path))
 	return NULL; // Throw exception (it's already set)
 
@@ -99,7 +106,7 @@ espeak_ng_py_Initialize(PyObject *self, PyObject *args, PyObject *kwargs)
     if (res != -1) {
 	espeak_SetSynthCallback(espeak_ng_proxy_callback);
 	// TODO: Probably shouldn't be set here...Should be kept in Python world
-	espeak_ng_py_SetVoiceByProperties(NULL, NULL);
+	// espeak_ng_py_SetVoiceByProperties(NULL, NULL, NULL);
 
 	// Returns sampling rate in Hz
 	PyObject *res_py = Py_BuildValue("i", res);
@@ -122,7 +129,8 @@ espeak_ng_py_SetSynthCallback(PyObject *self, PyObject *args)
 
 // Module methods
 static PyMethodDef EspeakNgMethods[] = {
-    {"initialize", espeak_ng_py_Initialize, METH_VARARGS, "configure speech synthesizer"},
+    {"initialize", espeak_ng_py_Initialize, METH_VARARGS | METH_KEYWORDS, "configure speech synthesizer"},
+    {"set_voice_by_properties", espeak_ng_py_SetVoiceByProperties, METH_VARARGS | METH_KEYWORDS, "set voice by properties"},
     {"synth", espeak_ng_py_Synth, METH_VARARGS, "synthesize text to speech"},
     {"list_voices", espeak_ng_py_ListVoices, METH_VARARGS, "list all available voices"},
     {NULL, NULL, 0, NULL} // Sentinel
@@ -141,9 +149,5 @@ static struct PyModuleDef espeakngmodule = {
 PyMODINIT_FUNC
 PyInit__espeak_ng(void)
 {
-    // Cannot initialize! Requires module (duh!)
-    // espeak_ng_py_initialize();
-
-    // TODO: Set callbacks? Do we need here?
     return PyModule_Create(&espeakngmodule);
 }
