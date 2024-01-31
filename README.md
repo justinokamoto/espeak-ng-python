@@ -1,3 +1,6 @@
+# ⚠️ WORK IN PROGRESS ⚠️
+This project is still in active development and is not yet functional.
+
 # espeak-python
 
 TODO: Read and obey espeak license!
