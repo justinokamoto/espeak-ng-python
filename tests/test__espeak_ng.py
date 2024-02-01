@@ -1,4 +1,4 @@
-# import mock
+import sys
 import tempfile
 import time
 import unittest
@@ -39,7 +39,7 @@ class Test__EspeakNg(unittest.TestCase):
         assert espeak_ng.set_voice_by_properties(age=voice["age"])
         assert espeak_ng.set_voice_by_properties(variant=voice["variant"])
 
-    def test_set_synth(self):
+    def test_synth(self):
         text_to_synthesize = "What a wonderful test."
         mock_callback = mock.Mock()
 
@@ -49,15 +49,17 @@ class Test__EspeakNg(unittest.TestCase):
         # Set callback to mock
         espeak_ng.set_synth_callback(mock_callback)
 
-        # Assert synth works
+        res = espeak_ng.synth(text_to_synthesize, len(text_to_synthesize))
 
-        assert espeak_ng.synth(text_to_synthesize, len(text_to_synthesize)) == \
-            espeak_ERROR.EE_OK
+        # Assert synth works
+        assert res == espeak_ERROR.EE_OK
+        # Assert that callback was called
+        mock_callback.assert_called()
 
         time.sleep(4) # Remove this! Parse sentinel in callback to
                       # know when synth has completed.
 
-        # Assert that callback is being triggered
-        mock_callback.assert_called()
 
         # TODO: Test unique_identifier and user_data
+
+        

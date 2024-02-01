@@ -3,6 +3,13 @@
 
 #include "espeak/speak_lib.h"
 
+// TODO: REMEMBER! Parsed arguments are BORROWED, so we don't need to worry
+// about decrementing reference counts!
+// https://docs.python.org/3/c-api/arg.html
+
+// TODO: To enable Pythonic default args, use static vars here
+
+
 // TODO: Do parsed params from _Build need to be decremented?
 // TODO: Test...Do default values get overwritten in parsing, even if arg is a
 // keyword with no value provided?
@@ -24,6 +31,9 @@ int espeak_ng_proxy_callback(short* wave, int num_samples, espeak_EVENT* event)
     return 0;
 }
 
+/*
+ * Wrapper function for espeak_Synth
+ */
 static PyObject *
 espeak_ng_py_Synth(PyObject *self, PyObject *args, PyObject *kwargs)
 {
@@ -44,8 +54,8 @@ espeak_ng_py_Synth(PyObject *self, PyObject *args, PyObject *kwargs)
     unsigned int *unique_identifier = NULL;
     PyObject *user_data = NULL;
 
-    static char *kwlist[] = {"text", "size", "position", "position_type", "end_position",
-			     "flags", "unique_identifier", "user_data"};
+    static const char *kwlist[] = {"text", "size", "position", "position_type", "end_position",
+				   "flags", "unique_identifier", "user_data"};
 
     if (!PyArg_ParseTupleAndKeywords(args, kwargs, "sI|IiIIOO", kwlist,
 				     &text, &size, &position, &position_type, &end_position,
@@ -53,24 +63,28 @@ espeak_ng_py_Synth(PyObject *self, PyObject *args, PyObject *kwargs)
 	return NULL; // Throw exception (it's already set)
     }
     
-    // TODO: Should take type espeak_ERROR
+
     int res = espeak_Synth(text, size, position, POS_CHARACTER, end_position,
 			   flags | espeakCHARS_AUTO, unique_identifier, (void *) user_data);
 
-    // Returns sampling rate in Hz
-    PyObject *res_py = Py_BuildValue("i", res);
+    // Returns espeak_ERROR code
+    // TODO: Python wrapper module should parse to enum
+    PyObject *res_py = Py_BuildValue("i", res); // Caller responsible for decrementing
     return res_py;
 }
 
+/*
+ * Wrapper function for espeak_SetVoiceByProperties
+ */
 static PyObject *
 espeak_ng_py_SetVoiceByProperties(PyObject *self, PyObject *args, PyObject *kwargs)
 {
-    // TODO: Create Python wrapper class around espeak_VOICE
+    // TODO: Create Python wrapper class around espeak_VOICE?
     const char *name=NULL;
     const char *languages=NULL;
     int gender=0, age=0, variant=0;
 
-    static char *kwlist[] = {"name", "languages", "gender", "age", "variant", NULL};
+    static const char *kwlist[] = {"name", "languages", "gender", "age", "variant", NULL};
 
     if (!PyArg_ParseTupleAndKeywords(args, kwargs, "|ssiii", kwlist,
 				     &name, &languages, &gender, &age, &variant))
@@ -115,13 +129,16 @@ espeak_ng_py_ListVoices(PyObject *sef, PyObject *args)
     return py_list;
 }
 
+/*
+ * Wrapper function for espeak_Initialize
+ */
 static PyObject *
 espeak_ng_py_Initialize(PyObject *self, PyObject *args, PyObject *kwargs)
 {
     const char *path = NULL;
     int output=0, buflength=0, options=0;
 
-    static char *kwlist[] = {"output", "buflength", "options", "path", NULL};
+    static const char *kwlist[] = {"output", "buflength", "options", "path", NULL};
 
     if (!PyArg_ParseTupleAndKeywords(args, kwargs, "|iiis", kwlist,
 				     &output, &buflength, &options, &path))
@@ -142,16 +159,17 @@ espeak_ng_py_Initialize(PyObject *self, PyObject *args, PyObject *kwargs)
 	espeak_SetSynthCallback(espeak_ng_proxy_callback);
 
 	// Returns sampling rate in Hz
-	PyObject *res_py = Py_BuildValue("i", res);
+	PyObject *res_py = Py_BuildValue("i", res); // Caller responsible for decrementing
 	return res_py;
     } else {
-	// TODO: decrement?
-	PyObject *res_py = Py_BuildValue("i", res);
+	PyObject *res_py = Py_BuildValue("i", res); // Caller responsible for decrementing
 	return res_py;
     }
 }
 
-// TODO: In python, test that a function is passed (or use "O" format str?)
+/*
+ * Wrapper function for espean_SetSynthCallback
+ */
 static PyObject *
 espeak_ng_py_SetSynthCallback(PyObject *self, PyObject *args)
 {
@@ -166,11 +184,13 @@ espeak_ng_py_SetSynthCallback(PyObject *self, PyObject *args)
 	PyErr_SetString(PyExc_TypeError, "espeak_ng_py_SetSynthCallback: Expected parameter to be callable");
 	return NULL; // Throw exception
     }
-    // TODO: Expect that the callback accept certain params?
 
-    // If successful, store callback
-    Py_CLEAR(SynthCallback); // Remove old callback (if it exists)
+    // TODO: Validate that the callback accepts certain params?
+
+    // Store callback
+    Py_XDECREF(SynthCallback); // Release borrowed reference
     SynthCallback = callback;
+    Py_IncRef(SynthCallback); // Borrow reference
 
     Py_RETURN_NONE;
 }

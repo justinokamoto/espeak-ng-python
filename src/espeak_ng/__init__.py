@@ -2,6 +2,8 @@ from enum import IntEnum
 
 """
 Python equivalents of the enums defined within speak_lib.h
+
+TODO: Define within extension?
 """
 
 class espeak_AUDIO_OUTPUT(IntEnum):
