@@ -4,6 +4,7 @@ import time
 import unittest
 from unittest import mock
 import warnings
+from espeak_ng import espeak_ERROR
 import _espeak_ng as espeak_ng
 
 class Test__EspeakNg(unittest.TestCase):
@@ -39,6 +40,7 @@ class Test__EspeakNg(unittest.TestCase):
         assert espeak_ng.set_voice_by_properties(variant=voice["variant"])
 
     def test_set_synth(self):
+        text_to_synthesize = "What a wonderful test."
         mock_callback = mock.Mock()
 
         self.assertRaises(TypeError, espeak_ng.set_synth_callback)
@@ -48,10 +50,14 @@ class Test__EspeakNg(unittest.TestCase):
         espeak_ng.set_synth_callback(mock_callback)
 
         # Assert synth works
-        assert espeak_ng.synth("hello")
-        
+
+        assert espeak_ng.synth(text_to_synthesize, len(text_to_synthesize)) == \
+            espeak_ERROR.EE_OK
+
         time.sleep(4) # Remove this! Parse sentinel in callback to
                       # know when synth has completed.
 
         # Assert that callback is being triggered
         mock_callback.assert_called()
+
+        # TODO: Test unique_identifier and user_data

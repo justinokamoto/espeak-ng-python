@@ -3,6 +3,7 @@
 
 #include "espeak/speak_lib.h"
 
+// TODO: Do parsed params from _Build need to be decremented?
 // TODO: Test...Do default values get overwritten in parsing, even if arg is a
 // keyword with no value provided?
 
@@ -18,41 +19,47 @@ int espeak_ng_proxy_callback(short* wave, int num_samples, espeak_EVENT* event)
 {
     PyObject *res = PyObject_CallFunction(SynthCallback, NULL);
 
-    // TODO: Call the callable
+    // TODO: Do something with the result
     printf("Callback ran.\n");
     return 0;
 }
 
 static PyObject *
-espeak_ng_py_Synth(PyObject *self, PyObject *args)
+espeak_ng_py_Synth(PyObject *self, PyObject *args, PyObject *kwargs)
 {
     // Null-terminated text to be spoken
-    const void *text;
+    const char *text;
     // Equal-or-greater than size of text data
     size_t size; // TODO: Get this from the string length
     // Position to start speaking
     unsigned int position = 0;
-    // Determines whether 'position' denotes chars, words, or sentences.
+    // Determines whether 'position' denotes chars, words, or
+    // sentences.
     espeak_POSITION_TYPE position_type = POS_CHARACTER;
     // Position to end speaking. 0 signifies no end.
     unsigned int end_position = 0;
-    unsigned int flags = espeakCHARS_AUTO;
+    // TODO: Char encoding is mute since Python 3 strings are unicode
+    // (default UTF-8)? We will apply espeakCHARS_AUTO after parsing args.
+    unsigned int flags = 0;
     unsigned int *unique_identifier = NULL;
-    void *user_data = NULL;
+    PyObject *user_data = NULL;
 
-    static char *kwlist[] = {"size", "position", "position_type", "end_position", "flags", "unique_identifier", "user_data"};
+    static char *kwlist[] = {"text", "size", "position", "position_type", "end_position",
+			     "flags", "unique_identifier", "user_data"};
 
-    // TODO: Parse out options like speech string
-    char hello[] = "Hi\0";
-    // TODO: Should take type espeak_ERROR
-    int res = espeak_Synth(&hello, 20, 0, POS_CHARACTER, 0, 0, NULL, NULL);
-    printf("\nSynth failed! CODE: %d\n", res);
-
-    // TODO: _Should_ return an error
-    if (res != EE_OK) {
-	Py_RETURN_FALSE;
+    if (!PyArg_ParseTupleAndKeywords(args, kwargs, "sI|IiIIOO", kwlist,
+				     &text, &size, &position, &position_type, &end_position,
+				     &flags, &unique_identifier, &user_data)) {
+	return NULL; // Throw exception (it's already set)
     }
-    Py_RETURN_TRUE;
+    
+    // TODO: Should take type espeak_ERROR
+    int res = espeak_Synth(text, size, position, POS_CHARACTER, end_position,
+			   flags | espeakCHARS_AUTO, unique_identifier, (void *) user_data);
+
+    // Returns sampling rate in Hz
+    PyObject *res_py = Py_BuildValue("i", res);
+    return res_py;
 }
 
 static PyObject *
@@ -173,7 +180,7 @@ static PyMethodDef EspeakNgMethods[] = {
     {"initialize", espeak_ng_py_Initialize, METH_VARARGS | METH_KEYWORDS, "configure speech synthesizer"},
     {"set_voice_by_properties", espeak_ng_py_SetVoiceByProperties, METH_VARARGS | METH_KEYWORDS, "set voice by properties"},
     {"set_synth_callback", espeak_ng_py_SetSynthCallback, METH_VARARGS, "set synth callback"},
-    {"synth", espeak_ng_py_Synth, METH_VARARGS, "synthesize text to speech"},
+    {"synth", espeak_ng_py_Synth, METH_VARARGS | METH_KEYWORDS, "synthesize text to speech"},
     {"list_voices", espeak_ng_py_ListVoices, METH_VARARGS, "list all available voices"},
     {NULL, NULL, 0, NULL} // Sentinel
 };
