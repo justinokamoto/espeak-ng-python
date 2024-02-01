@@ -22,6 +22,9 @@ class Test__EspeakNg(unittest.TestCase):
         assert isinstance(res, list)
         assert len(res) > 0, "No voices found. Verify espeak installation."
 
+        assert sys.getrefcount(res) == 2, f"Expected ref count of 2 but got {sys.getrefcount(res)}"
+        assert sys.getrefcount(res[0]) == 2, f"Expected ref count of 2 but got {sys.getrefcount(res[0])}"
+
     """Test _espeak_ng (extension module)"""
     def test_set_voice_by_properties(self):
         # Pick an available voice installed on the system and attempt
@@ -58,7 +61,6 @@ class Test__EspeakNg(unittest.TestCase):
 
         time.sleep(4) # Remove this! Parse sentinel in callback to
                       # know when synth has completed.
-
 
         # TODO: Test unique_identifier and user_data
 

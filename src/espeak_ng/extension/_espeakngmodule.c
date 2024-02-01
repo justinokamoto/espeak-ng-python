@@ -106,6 +106,9 @@ espeak_ng_py_SetVoiceByProperties(PyObject *self, PyObject *args, PyObject *kwar
     Py_RETURN_TRUE;
 }
 
+/*
+ * Wrapper function for espeak_ListVoices
+ */
 static PyObject *
 espeak_ng_py_ListVoices(PyObject *sef, PyObject *args)
 {
@@ -125,8 +128,12 @@ espeak_ng_py_ListVoices(PyObject *sef, PyObject *args)
 					     "age", item->age,
 					     "variant", item->variant);
 	PyList_Append(py_list, voice_list);
+	// TODO: Looks like List doesn't steal reference to
+	// voice_list, so it's decremented here? We should double
+	// check this.
+	Py_DECREF(voice_list);
     }
-    return py_list;
+    return py_list; // Caller's responsiblity for decrementing
 }
 
 /*
