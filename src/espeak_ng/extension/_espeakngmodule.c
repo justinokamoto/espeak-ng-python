@@ -41,13 +41,10 @@ static PyTypeObject ESpeakNgPyEventObjectType = {
 // Helper functions
 // ***********************************************************
 
-
-// TODO: REMEMBER! Parsed arguments are BORROWED, so we don't need to worry
-// about decrementing reference counts!
+// Remember: Parsed arguments are BORROWED, so we don't decrement them
 // https://docs.python.org/3/c-api/arg.html
 
 // TODO: To enable Pythonic default args, use static vars here
-
 
 // TODO: Do parsed params from _Build need to be decremented?
 // TODO: Test...Do default values get overwritten in parsing, even if arg is a
@@ -74,6 +71,10 @@ int espeak_ng_proxy_callback(short* wave, int num_samples, espeak_EVENT* event)
 					     wave, num_samples, num_samples, event);
     // TODO: Check if res_py is NULL
 
+    if (!PyLong_Check(res_py)) {
+	PyErr_SetString(PyExc_RuntimeError, "espeak_ng_proxy_callback: Callback did not return integer value");
+    }
+
     // Convert the Python integer return code to C int
     int res = PyLong_AsLong(res_py);
 
@@ -81,7 +82,7 @@ int espeak_ng_proxy_callback(short* wave, int num_samples, espeak_EVENT* event)
     if (res == -1 && PyErr_Occurred()) {
 	// TODO: What happens when error occurs in async mode? This
 	// routine is called by C lib directly
-        PyErr_SetString(PyExc_TypeError, "espeak_ng_proxy_callback: callback did not return int error code");
+        PyErr_SetString(PyExc_TypeError, "espeak_ng_proxy_callback: Could not parse callback integer value");
     }
 
     return res;

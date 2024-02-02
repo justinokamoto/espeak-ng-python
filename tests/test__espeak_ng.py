@@ -10,6 +10,7 @@ class Test__EspeakNg(unittest.TestCase):
     def setUp(self):
         # Initialize in a synchronous mode without playback
         espeak_ng.initialize(output=espeak_AUDIO_OUTPUT.AUDIO_OUTPUT_SYNCHRONOUS)
+        assert espeak_ng.set_voice_by_properties()
 
     def test_list_voices(self):
         res = espeak_ng.list_voices()

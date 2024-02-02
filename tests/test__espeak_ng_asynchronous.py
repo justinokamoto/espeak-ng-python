@@ -11,6 +11,9 @@ import _espeak_ng as espeak_ng
 synth_finished = False
 synth_condition = threading.Condition()
 
+# TODO: Does the lifetime of a function change if refcount is increased? Or do we need to have:
+# if (SynthCallback == NULL || Py_REFCNT(SynthCallback) == 0)?
+
 def dummy_callback(wave, num_samples, event, notify=False):
     print(f"wave: {wave}")
     if not wave and notify:
@@ -18,11 +21,11 @@ def dummy_callback(wave, num_samples, event, notify=False):
         synth_condition = notify_all()
     return 0
 
-
 class Test__EspeakNg_Asynchronous(unittest.TestCase):
     def setUp(self):
         # Initialize in asynchronous mode without playback
         espeak_ng.initialize(output=espeak_AUDIO_OUTPUT.AUDIO_OUTPUT_RETRIEVAL)
+        assert espeak_ng.set_voice_by_properties()
         espeak_ng.set_synth_callback(dummy_callback)
 
     def test_asynchronous_mode(self):
