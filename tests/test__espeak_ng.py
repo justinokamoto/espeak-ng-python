@@ -8,14 +8,13 @@ from espeak_ng import espeak_ERROR
 import _espeak_ng as espeak_ng
 
 class Test__EspeakNg(unittest.TestCase):
-    def dummy_callback():
+    def dummy_callback(wave, num_samples, event):
         """Dummy callback that can be used when testing synth callback
         functionality"""
-        pass
+        return 0
 
     def setUp(self):
         espeak_ng.initialize()
-        # espeak_ng.set_synth_callback(self.dummy_callback)
 
     def test_list_voices(self):
         res = espeak_ng.list_voices()
@@ -43,8 +42,8 @@ class Test__EspeakNg(unittest.TestCase):
         assert espeak_ng.set_voice_by_properties(variant=voice["variant"])
 
     def test_synth(self):
-        text_to_synthesize = "What a wonderful test."
-        mock_callback = mock.Mock()
+        text_to_synthesize = "test synth"
+        mock_callback = mock.Mock(return_value=0)
 
         self.assertRaises(TypeError, espeak_ng.set_synth_callback)
         self.assertRaises(TypeError, espeak_ng.set_synth_callback, 0)
@@ -59,9 +58,17 @@ class Test__EspeakNg(unittest.TestCase):
         # Assert that callback was called
         mock_callback.assert_called()
 
-        time.sleep(4) # Remove this! Parse sentinel in callback to
-                      # know when synth has completed.
-
         # TODO: Test unique_identifier and user_data
+
+    def test_proxy_callback(self):
+        def mock_callback(wave, num_samples, event):
+            # print(f"wave: {wave}\nnum_samples: {num_samples}\n, event: {event}")
+            return 0
+
+        text_to_synthesize = "test proxy"
+
+        espeak_ng.set_synth_callback(mock_callback)
+        espeak_ng.synth(text_to_synthesize, len(text_to_synthesize))
+
 
         

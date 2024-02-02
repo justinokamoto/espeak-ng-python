@@ -24,11 +24,33 @@ static PyObject *SynthCallback = NULL;
 // TODO: Multiple callbacks? Not sure if this is useful...
 int espeak_ng_proxy_callback(short* wave, int num_samples, espeak_EVENT* event)
 {
-    PyObject *res = PyObject_CallFunction(SynthCallback, NULL);
+    // TODO: Does caller own wave lifetime?
 
-    // TODO: Do something with the result
-    printf("Callback ran.\n");
-    return 0;
+    // TODO: short to char doesn't matter since it's all bytes, right?
+    /* PyObject *wave_py = Py_BuildValue("y", wave); */
+    /* PyObject *num_samples_py = PyLong_FromLong(num_samples); */
+
+    if (SynthCallback == NULL)
+	return 0;
+
+    // TODO: Parse event data!!!!!!!!!!!!!
+
+    // TODO: THIS IS WRONG! THE EVENT IS AN OBJECT
+    // Result either 0 or 1
+    PyObject *res_py = PyObject_CallFunction(SynthCallback, "yii",
+					  wave, num_samples, event);
+
+    // Convert the Python integer return code to C int
+    int res = PyLong_AsLong(res_py);
+
+    // Check for errors during conversion
+    if (res == -1 && PyErr_Occurred()) {
+	// TODO: What happens when error occurs in async mode? This
+	// routine is called by C lib directly
+        PyErr_SetString(PyExc_TypeError, "espeak_ng_proxy_callback: callback did not return int error code");
+    }
+
+    return res;
 }
 
 /*
@@ -61,8 +83,7 @@ espeak_ng_py_Synth(PyObject *self, PyObject *args, PyObject *kwargs)
 				     &text, &size, &position, &position_type, &end_position,
 				     &flags, &unique_identifier, &user_data)) {
 	return NULL; // Throw exception (it's already set)
-    }
-    
+    }    
 
     int res = espeak_Synth(text, size, position, POS_CHARACTER, end_position,
 			   flags | espeakCHARS_AUTO, unique_identifier, (void *) user_data);
