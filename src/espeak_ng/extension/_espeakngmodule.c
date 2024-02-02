@@ -63,21 +63,15 @@ static PyObject *SynthCallback = NULL;
 // TODO: Multiple callbacks? Not sure if this is useful...
 int espeak_ng_proxy_callback(short* wave, int num_samples, espeak_EVENT* event)
 {
-    // TODO: Does caller own wave lifetime?
+    // TODO: Does caller own wave lifetime? See if wave is copied in CallFunction
 
     // TODO: short to char doesn't matter since it's all bytes, right?
-    /* PyObject *wave_py = Py_BuildValue("y", wave); */
-    /* PyObject *num_samples_py = PyLong_FromLong(num_samples); */
-
     if (SynthCallback == NULL)
 	return 0;
 
-    // TODO: Parse event data!!!!!!!!!!!!!
-
-    // TODO: THIS IS WRONG! THE EVENT IS AN OBJECT
     // Result either 0 or 1
-    PyObject *res_py = PyObject_CallFunction(SynthCallback, "yii",
-					  wave, num_samples, event);
+    PyObject *res_py = PyObject_CallFunction(SynthCallback, "y#ii",
+					     wave, num_samples, num_samples, event);
 
     // Convert the Python integer return code to C int
     int res = PyLong_AsLong(res_py);
@@ -223,7 +217,7 @@ espeak_ng_py_Initialize(PyObject *self, PyObject *args, PyObject *kwargs)
     // TODO: Make sure this cast is safe! (case switch enums or < >)
     // TODO: This blows up when another option is set
     // TODO: Don't hardcode this stuff
-    int res = espeak_Initialize(AUDIO_OUTPUT_SYNCH_PLAYBACK, 400, NULL, 0);
+    int res = espeak_Initialize(output, buflength, path, options);
 
     // res is either sample rate in Hz, or -1 (EE_INTERNAL_ERROR)
     if (res != -1) {
