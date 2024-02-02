@@ -3,6 +3,45 @@
 
 #include "espeak/speak_lib.h"
 
+
+// ***********************************************************
+// Python Type Definitions
+// ***********************************************************
+// TODO: Split into separate .c file?
+
+/*
+ * Python wrapper object for espeak_EVENT
+ */
+typedef struct {
+    PyObject_HEAD
+    PyObject *type;
+    PyObject *unique_identifier;
+    PyObject *text_position;
+    PyObject *length;
+    PyObject *audio_position;
+    PyObject *sample;
+    PyObject *user_data;
+    PyObject *number;
+    PyObject *name;
+    PyObject *string;
+} EspeakNgPyEventObject;
+
+// TODO: Create setters/getters
+static PyTypeObject ESpeakNgPyEventObjectType = {
+    .ob_base = PyVarObject_HEAD_INIT(NULL, 0)
+    .tp_name = "_espeak_ng.Event",
+    .tp_doc = PyDoc_STR("Python wrapper type for espeak_EVENT"),
+    .tp_basicsize = sizeof(EspeakNgPyEventObject),
+    .tp_itemsize = 0,
+    .tp_flags = Py_TPFLAGS_DEFAULT,
+    .tp_new = PyType_GenericNew,
+};
+
+// ***********************************************************
+// Helper functions
+// ***********************************************************
+
+
 // TODO: REMEMBER! Parsed arguments are BORROWED, so we don't need to worry
 // about decrementing reference counts!
 // https://docs.python.org/3/c-api/arg.html
@@ -52,6 +91,10 @@ int espeak_ng_proxy_callback(short* wave, int num_samples, espeak_EVENT* event)
 
     return res;
 }
+
+// ***********************************************************
+// Wrapper functions
+// ***********************************************************
 
 /*
  * Wrapper function for espeak_Synth
@@ -223,6 +266,10 @@ espeak_ng_py_SetSynthCallback(PyObject *self, PyObject *args)
     Py_RETURN_NONE;
 }
 
+// ***********************************************************
+// Python Module
+// ***********************************************************
+
 // Module methods
 static PyMethodDef EspeakNgMethods[] = {
     {"initialize", espeak_ng_py_Initialize, METH_VARARGS | METH_KEYWORDS, "configure speech synthesizer"},
@@ -246,5 +293,24 @@ static struct PyModuleDef espeakngmodule = {
 PyMODINIT_FUNC
 PyInit__espeak_ng(void)
 {
-    return PyModule_Create(&espeakngmodule);
+    PyObject *m;
+
+    // Initialize type
+    if (PyType_Ready(&ESpeakNgPyEventObjectType) < 0)
+        return NULL;
+
+    // Create module
+    m = PyModule_Create(&espeakngmodule);
+    if (m == NULL)
+        return NULL;
+
+    // Add type to module
+    Py_INCREF(&ESpeakNgPyEventObjectType);
+    if (PyModule_AddObject(m, "Event", (PyObject *) &ESpeakNgPyEventObjectType) < 0) {
+	// If failure occurs, cleanup refs
+        Py_DECREF(&ESpeakNgPyEventObjectType);
+        Py_DECREF(m);
+        return NULL;
+    }
+    return m;
 }
