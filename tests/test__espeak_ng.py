@@ -1,20 +1,15 @@
 import sys
-import tempfile
 import time
 import unittest
 from unittest import mock
-import warnings
-from espeak_ng import espeak_ERROR
+from espeak_ng import espeak_ERROR, espeak_AUDIO_OUTPUT
 import _espeak_ng as espeak_ng
 
-class Test__EspeakNg(unittest.TestCase):
-    def dummy_callback(wave, num_samples, event):
-        """Dummy callback that can be used when testing synth callback
-        functionality"""
-        return 0
 
+class Test__EspeakNg(unittest.TestCase):
     def setUp(self):
-        espeak_ng.initialize()
+        # Initialize in a synchronous mode without playback
+        espeak_ng.initialize(output=espeak_AUDIO_OUTPUT.AUDIO_OUTPUT_SYNCHRONOUS)
 
     def test_list_voices(self):
         res = espeak_ng.list_voices()
@@ -43,8 +38,20 @@ class Test__EspeakNg(unittest.TestCase):
 
     def test_synth(self):
         text_to_synthesize = "test synth"
+
+        res = espeak_ng.synth(text_to_synthesize, len(text_to_synthesize))
+
+        # Assert synth works
+        assert res == espeak_ERROR.EE_OK, \
+            f"Expected {espeak_ERROR.EE_OK.name} but received {espeak_ERROR(res).name}"
+
+        # TODO: Test unique_identifier and user_data
+
+    def test_proxy_callback(self):
+        text_to_synthesize = "test callback"
         mock_callback = mock.Mock(return_value=0)
 
+        # Assert that arg is required to be callable
         self.assertRaises(TypeError, espeak_ng.set_synth_callback)
         self.assertRaises(TypeError, espeak_ng.set_synth_callback, 0)
 
@@ -53,22 +60,5 @@ class Test__EspeakNg(unittest.TestCase):
 
         res = espeak_ng.synth(text_to_synthesize, len(text_to_synthesize))
 
-        # Assert synth works
-        assert res == espeak_ERROR.EE_OK
         # Assert that callback was called
         mock_callback.assert_called()
-
-        # TODO: Test unique_identifier and user_data
-
-    def test_proxy_callback(self):
-        def mock_callback(wave, num_samples, event):
-            # print(f"wave: {wave}\nnum_samples: {num_samples}\n, event: {event}")
-            return 0
-
-        text_to_synthesize = "test proxy"
-
-        espeak_ng.set_synth_callback(mock_callback)
-        espeak_ng.synth(text_to_synthesize, len(text_to_synthesize))
-
-
-        

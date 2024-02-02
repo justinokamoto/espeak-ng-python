@@ -69,9 +69,10 @@ int espeak_ng_proxy_callback(short* wave, int num_samples, espeak_EVENT* event)
     if (SynthCallback == NULL)
 	return 0;
 
-    // Result either 0 or 1
+    // Result should be either 0 or 1
     PyObject *res_py = PyObject_CallFunction(SynthCallback, "y#ii",
 					     wave, num_samples, num_samples, event);
+    // TODO: Check if res_py is NULL
 
     // Convert the Python integer return code to C int
     int res = PyLong_AsLong(res_py);
@@ -216,7 +217,6 @@ espeak_ng_py_Initialize(PyObject *self, PyObject *args, PyObject *kwargs)
 
     // TODO: Make sure this cast is safe! (case switch enums or < >)
     // TODO: This blows up when another option is set
-    // TODO: Don't hardcode this stuff
     int res = espeak_Initialize(output, buflength, path, options);
 
     // res is either sample rate in Hz, or -1 (EE_INTERNAL_ERROR)
