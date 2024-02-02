@@ -77,13 +77,13 @@ espeak_ng_py_Synth(PyObject *self, PyObject *args, PyObject *kwargs)
     PyObject *user_data = NULL;
 
     static const char *kwlist[] = {"text", "size", "position", "position_type", "end_position",
-				   "flags", "unique_identifier", "user_data"};
+				   "flags", "unique_identifier", "user_data", NULL};
 
     if (!PyArg_ParseTupleAndKeywords(args, kwargs, "sI|IiIIOO", kwlist,
 				     &text, &size, &position, &position_type, &end_position,
 				     &flags, &unique_identifier, &user_data)) {
 	return NULL; // Throw exception (it's already set)
-    }    
+    }
 
     int res = espeak_Synth(text, size, position, POS_CHARACTER, end_position,
 			   flags | espeakCHARS_AUTO, unique_identifier, (void *) user_data);
