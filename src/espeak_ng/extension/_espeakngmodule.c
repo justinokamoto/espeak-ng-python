@@ -71,7 +71,7 @@ int espeak_ng_proxy_callback(short* wave, int num_samples, espeak_EVENT* event)
     PyGILState_STATE state = PyGILState_Ensure();
     // Result should be either 0 or 1
     PyObject *res_py = PyObject_CallFunction(SynthCallback, "y#ii",
-					     wave, num_samples, event);
+					     wave, num_samples, event); // TODO: Send EVENT PY_OBJECT!!!!!
     PyGILState_Release(state);
 
     // TODO: Check if res_py is NULL
