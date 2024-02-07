@@ -118,7 +118,8 @@ espeak_ng_py_Synth(PyObject *self, PyObject *args, PyObject *kwargs)
     static const char *kwlist[] = {"text", "size", "position", "position_type", "end_position",
 				   "flags", "unique_identifier", "user_data", NULL};
 
-    if (!PyArg_ParseTupleAndKeywords(args, kwargs, "sI|IiIIOO", kwlist,
+    // Use 'n' instead of 'I' since (on Darwin) size_t is unsigned long long
+    if (!PyArg_ParseTupleAndKeywords(args, kwargs, "sn|IiIIOO", kwlist,
 				     &text, &size, &position, &position_type, &end_position,
 				     &flags, &unique_identifier, &user_data)) {
 	return NULL; // Throw exception (it's already set)
