@@ -66,11 +66,15 @@ int espeak_ng_proxy_callback(short* wave, int num_samples, espeak_EVENT* event)
     if (SynthCallback == NULL)
 	return 0;
 
+    // Callback may be called from non-Python created thread, so
+    // ensure to register threads w/ interpretter and acquire the GIL
+    PyGILState_STATE state = PyGILState_Ensure();
     // Result should be either 0 or 1
     PyObject *res_py = PyObject_CallFunction(SynthCallback, "y#ii",
-					     wave, num_samples, num_samples, event);
-    // TODO: Check if res_py is NULL
+					     wave, num_samples, event);
+    PyGILState_Release(state);
 
+    // TODO: Check if res_py is NULL
     if (!PyLong_Check(res_py)) {
 	PyErr_SetString(PyExc_RuntimeError, "espeak_ng_proxy_callback: Callback did not return integer value");
     }
