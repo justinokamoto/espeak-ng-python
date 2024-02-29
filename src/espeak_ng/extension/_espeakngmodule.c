@@ -11,6 +11,8 @@
 
 /*
  * Python wrapper object for espeak_EVENT
+ *
+ * It's a simple POJO with getters for all attributes.
  */
 typedef struct {
     PyObject_HEAD
@@ -21,12 +23,48 @@ typedef struct {
     PyObject *audio_position;
     PyObject *sample;
     PyObject *user_data;
-    PyObject *number;
-    PyObject *name;
-    PyObject *string;
+    PyObject *id;
 } EspeakNgPyEventObject;
 
-// TODO: Create setters/getters
+/*
+ * Macro to generate getter methods for EspeakNgPyEventObject
+ */
+#define EspeakNgPyEventObject_GETTER(name)                                                        \
+  static PyObject *EspeakNgPyEventObject_get_##name(EspeakNgPyEventObject *self, void *closure) { \
+      Py_INCREF(self->name);                                                                      \
+      return self->name;	            	                                                  \
+  }
+
+// Define getter methods using macro
+EspeakNgPyEventObject_GETTER(type);
+EspeakNgPyEventObject_GETTER(unique_identifier);
+EspeakNgPyEventObject_GETTER(text_position);
+EspeakNgPyEventObject_GETTER(length);
+EspeakNgPyEventObject_GETTER(audio_position);
+EspeakNgPyEventObject_GETTER(sample);
+EspeakNgPyEventObject_GETTER(user_data);
+EspeakNgPyEventObject_GETTER(id);
+
+/*
+ * Define ESpeakNgPyEventObjectType attributes getter and setter
+ */
+static PyGetSetDef EspeakNgPyEventObject_getsetters[] = {
+    {"type", (getter)EspeakNgPyEventObject_get_type, NULL, "The 'type' attribute", NULL},
+    {"unique_identifier", (getter)EspeakNgPyEventObject_get_unique_identifier, NULL, "The 'unique_identifier' attribute", NULL},
+    {"text_position", (getter)EspeakNgPyEventObject_get_text_position, NULL, "The 'text_position' attribute", NULL},
+    {"length", (getter)EspeakNgPyEventObject_get_length, NULL, "The 'length' attribute", NULL},
+    {"audio_position", (getter)EspeakNgPyEventObject_get_audio_position, NULL, "The 'audio_position' attribute", NULL},
+    {"sample", (getter)EspeakNgPyEventObject_get_sample, NULL, "The 'sample' attribute", NULL},
+    {"user_data", (getter)EspeakNgPyEventObject_get_user_data, NULL, "The 'user_data' attribute", NULL},
+    {"id", (getter)EspeakNgPyEventObject_get_id, NULL, "The 'id' attribute, NULL"},
+    {NULL} // Sentinel
+};
+
+// TODO: Need an init method that sets attributes to None (to avoid
+// crashes if other modules attempt to use Event class)
+/*
+ * Create new Python type '_espeak_ng.Event'
+ */
 static PyTypeObject ESpeakNgPyEventObjectType = {
     .ob_base = PyVarObject_HEAD_INIT(NULL, 0)
     .tp_name = "_espeak_ng.Event",
@@ -35,6 +73,7 @@ static PyTypeObject ESpeakNgPyEventObjectType = {
     .tp_itemsize = 0,
     .tp_flags = Py_TPFLAGS_DEFAULT,
     .tp_new = PyType_GenericNew,
+    .tp_getset = EspeakNgPyEventObject_getsetters,
 };
 
 // ***********************************************************
@@ -69,12 +108,50 @@ int espeak_ng_proxy_callback(short* wave, int num_samples, espeak_EVENT* event)
     // Callback may be called from non-Python created thread, so
     // ensure to register threads w/ interpretter and acquire the GIL
     PyGILState_STATE state = PyGILState_Ensure();
+
+    PyObject *wave_py = Py_BuildValue("y#", wave);
+    PyObject *num_samples_py = Py_BuildValue("i", num_samples);
+    EspeakNgPyEventObject *event_py = PyObject_New(EspeakNgPyEventObject, &ESpeakNgPyEventObjectType);
+
+    // TODO: How does reference counting get handled here?
+    // TODO: Extract this building to a separate function
+    event_py->type = Py_BuildValue("i", event->type);
+    event_py->unique_identifier = Py_BuildValue("I", event->unique_identifier);
+    event_py->text_position = Py_BuildValue("i", event->text_position);
+    event_py->length = Py_BuildValue("i", event->length);
+    event_py->audio_position = Py_BuildValue("i", event->audio_position);
+    event_py->sample = Py_BuildValue("i", event->sample);
+    // TODO: How will users ever be able to use this?
+    if (event->user_data != NULL)
+	event_py->user_data = Py_BuildValue("O", event->user_data);
+    else
+	// TODO: Incref?
+	event_py->user_data = Py_None;
+
+    if (event->type == espeakEVENT_WORD || event->type == espeakEVENT_SENTENCE)
+	event_py->id = Py_BuildValue("i", event->id.number);
+    else if (event->type == espeakEVENT_MARK || event->type == espeakEVENT_PLAY)
+	event_py->id = Py_BuildValue("s", event->id.name);
+    // TODO: Not certain if this is only set during PHONEME events?
+    else if (event->type == espeakEVENT_PHONEME)
+	// TODO: Idk if s# is correct here...
+	event_py->id = Py_BuildValue("#s", event->id.string, 8);
+    else {
+	// TODO: Incref?
+	event_py->id = Py_None;	
+    }
+
     // Result should be either 0 or 1
-    PyObject *res_py = PyObject_CallFunction(SynthCallback, "y#ii",
-					     wave, num_samples, event); // TODO: Send EVENT PY_OBJECT!!!!!
+    PyObject *res_py = PyObject_CallFunctionObjArgs(SynthCallback, wave_py, num_samples_py, event_py, NULL);
+
+    // TODO: Decrement counts for these arguments???
+    Py_DECREF(event_py);
+    Py_DECREF(wave_py);
+    Py_DECREF(num_samples_py);
+
     PyGILState_Release(state);
 
-    // TODO: Check if res_py is NULL
+    // TODO: Check if res_py is NULL?
     if (!PyLong_Check(res_py)) {
 	PyErr_SetString(PyExc_RuntimeError, "espeak_ng_proxy_callback: Callback did not return integer value");
     }
@@ -258,6 +335,9 @@ espeak_ng_py_SetSynthCallback(PyObject *self, PyObject *args)
 
     // TODO: Validate that the callback accepts certain params?
 
+    // TODO: Could this ever be an issue if prev SynthCallback no
+    // longer exists? This cannot be the case though since we hold a
+    // reference here...
     // Store callback
     Py_XDECREF(SynthCallback); // Release borrowed reference
     SynthCallback = callback;

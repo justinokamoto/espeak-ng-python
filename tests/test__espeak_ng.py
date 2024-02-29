@@ -6,10 +6,17 @@ from espeak_ng import espeak_ERROR, espeak_AUDIO_OUTPUT
 import _espeak_ng as espeak_ng
 
 
+def dummy_callback(wave, num_samples, event):
+    # print(f"sample: {event.sample}\ntext_position: {event.text_position}")
+    return 0
+
 class Test__EspeakNg(unittest.TestCase):
     def setUp(self):
         # Initialize in a synchronous mode without playback
         espeak_ng.initialize(output=espeak_AUDIO_OUTPUT.AUDIO_OUTPUT_SYNCHRONOUS)
+        # Make sure callback is set to function available within
+        # module scope (as other tests may have set it)
+        espeak_ng.set_synth_callback(dummy_callback)
         assert espeak_ng.set_voice_by_properties()
 
     def test_list_voices(self):
@@ -63,3 +70,26 @@ class Test__EspeakNg(unittest.TestCase):
 
         # Assert that callback was called
         mock_callback.assert_called()
+
+    def test_proxy_callback_parsing_event(self):
+        text_to_synthesize = "test callback"
+
+        res = espeak_ng.synth(text_to_synthesize, len(text_to_synthesize))
+
+        # TODO: Use mock callback and validate that event is passed
+        # with valid attributes
+        assert(False)
+
+    def test_event_object(self):
+        # Test instantiation
+        assert espeak_ng.Event() is not None
+        # Test expected attributes exist
+        # TODO: Make more efficient
+        assert 'audio_position' in dir(espeak_ng.Event)
+        assert 'id' in dir(espeak_ng.Event)
+        assert 'length' in dir(espeak_ng.Event)
+        assert 'sample' in dir(espeak_ng.Event)
+        assert 'text_position' in dir(espeak_ng.Event)
+        assert 'type' in dir(espeak_ng.Event)
+        assert 'unique_identifier' in dir(espeak_ng.Event)
+        assert 'user_data' in dir(espeak_ng.Event)
