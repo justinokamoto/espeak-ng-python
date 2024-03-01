@@ -4,7 +4,11 @@
 
 # espeak-ng
 
-A Python bindings library for the [eSpeak NG](https://github.com/espeak-ng/espeak-ng?tab=readme-ov-file) utility, which is a compact open source software text-to-speech synthesizer for Linux, MacOS, Windows, Android, and other operating systems.
+A Python bindings library for the [eSpeak NG](https://github.com/espeak-ng/espeak-ng?tab=readme-ov-file) utility, which is a compact open source software text-to-speech synthesizer with distributions for all major operating systems.
+
+## Supported Platforms
+
+TODO: Matrix
 
 ## Supported Features
 
@@ -76,6 +80,12 @@ To run tests, use the helper `runtests` script:
 
 ```
 python3 -m runtests
+```
+
+To build a local distribution archive, run:
+
+```
+pip wheel .
 ```
 
 
