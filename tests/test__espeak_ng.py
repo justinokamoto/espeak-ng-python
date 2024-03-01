@@ -7,7 +7,6 @@ import _espeak_ng as espeak_ng
 
 
 def dummy_callback(wave, num_samples, event):
-    # print(f"sample: {event.sample}\ntext_position: {event.text_position}")
     return 0
 
 class Test__EspeakNg(unittest.TestCase):
@@ -72,13 +71,22 @@ class Test__EspeakNg(unittest.TestCase):
         mock_callback.assert_called()
 
     def test_proxy_callback_parsing_event(self):
+        def callback(wave, num_samples, event):
+            # Assert all attributes are populated with expected types
+            assert isinstance(event.type, int)
+            assert isinstance(event.unique_identifier, int)
+            assert isinstance(event.text_position, int)
+            assert isinstance(event.length, int)
+            assert isinstance(event.audio_position, int)
+            assert isinstance(event.sample, int)
+
+            return 0
+
         text_to_synthesize = "test callback"
 
-        res = espeak_ng.synth(text_to_synthesize, len(text_to_synthesize))
+        espeak_ng.set_synth_callback(callback)
 
-        # TODO: Use mock callback and validate that event is passed
-        # with valid attributes
-        assert(False)
+        res = espeak_ng.synth(text_to_synthesize, len(text_to_synthesize))
 
     def test_event_object(self):
         # Test instantiation
