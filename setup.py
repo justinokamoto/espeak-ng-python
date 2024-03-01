@@ -1,22 +1,23 @@
 import os
 from os import path
+import platform
 from setuptools import setup, Extension
 import subprocess
 
-# TODO: Learn distribution of wheel files (for MacOS, Linux, etc.)
-
 # TODO: Warn about submodules missing?
-# TODO: Build espeak-ng submodule?
-# TODO: Cross-comp for linux, macos, windows
+# TODO: Build espeak-ng submodule within wheel or package prebuild libraries?
+library_dirs = []
 
-# OR should just use the loader path (and have runtime_library_dirs set correctly?)
-import distutils
+if platform.system() == "Darwin":
+    # TODO: Figure out why homebrew version creates segfaults in
+    # tests and remove this path
+    library_dirs.append(path.join(path.expanduser("~"), ".local", "lib"))
+    # library_dirs.append(path.join(os.sep, "opt", "homebrew", "lib"))
 
 extension = Extension('_espeak_ng',
-                      # TODO: Walk file tree for these files?
                       sources=[path.join('src','espeak_ng','extension','_espeakngmodule.c')],
                       include_dirs=[path.join('espeak-ng', 'src', 'include')],
-                      library_dirs=[path.join(os.sep, 'opt','homebrew','lib')],
-                      libraries=['espeak'])
+                      library_dirs=library_dirs,
+                      libraries=['espeak-ng'])
 
 setup(ext_modules=[extension])
