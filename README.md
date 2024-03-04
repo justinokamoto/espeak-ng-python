@@ -34,7 +34,9 @@ $ apt install espeak
 
 ## Installation
 
-You can download this Python package from the Pythin Package Index:
+Provided you have installed the required dependencies described from
+the previous section, you can download this Python package from the
+Pythin Package Index:
 
 TODO: Upload package to PyPI!
 
@@ -46,7 +48,7 @@ pip install espeak-ng-python
 
 ### Quick Start
 
-```
+```python
 import espeak_ng
 
 # Initialize the espeak library
@@ -59,7 +61,7 @@ espeak_ng.synth("Hello, world.")
 
 TODO
 
-```
+```python
 # Set callback to some user-defined callback function
 # with the following signature, where the return value
 # is 0 on success and 1 on failure:
