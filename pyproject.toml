@@ -10,14 +10,16 @@ authors = [
 ]
 description = "Python wrapper for espeak-ng."
 readme = "README.md"
+license = {file = "COPYING"}
+keywords = ["espeak", "pico", "festival", "TTS", "text-to-speech"]
 requires-python = ">=3.8"
-# TODO: Operating System dependent!
 classifiers = [
     "Programming Language :: Python :: 3",
-    "License :: OSI Approved :: MIT License",
-    "Operating System :: OS Independent",
+    "License :: OSI Approved :: GNU General Public License v3 or later (GPLv3+)",
+    "Operating System :: MacOS",
+    "Operating System :: POSIX :: Linux"
 ]
 
 [project.urls]
-# Homepage = "https://github.com/"
-# Issues = "https://github.com/"
+Repository = "https://github.com/justinokamoto/espeak-ng-python"
+Issues = "https://github.com/justinokamoto/espeak-ng-python/issues"

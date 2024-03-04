@@ -40,8 +40,7 @@ pip install espeak-ng-python
 
 ## Usage
 
-### Initialization:
-
+### Quick Start
 
 ```
 import espeak_ng
@@ -49,18 +48,23 @@ import espeak_ng
 # Initialize the espeak library
 espeak_ng.initialize()
 
+espeak_ng.synth("Hello, world.")
+```
+
+#### Asynchronous Mode
+
+TODO
+
+```
 # Set callback to some user-defined callback function
 # with the following signature, where the return value
 # is 0 on success and 1 on failure:
-#
-# function(wave: bytes, num_samples: int, event: espeak_ng.Event) -> int
+
+def my_callback_func(wave: bytes, num_samples: int, event: espeak_ng.Event) -> int:
+  # ... my code here
+  return 0
+
 espeak_ng.set_synth_callback(my_callback_func)
-```
-
-### Synthesis
-
-```
-espeak_ng.synth("Hello, world.")
 ```
 
 ### Configuration

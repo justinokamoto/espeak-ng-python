@@ -94,9 +94,9 @@ static PyTypeObject ESpeakNgPyEventObjectType = {
 // Python function handle to be executed during synthesization
 static PyObject *SynthCallback = NULL;
 
-// Proxy callback that will handle calling the user-specified Python callback
-// TODO: Experiment with 'wave' file (I think it's for RETRIEVAL)
-// TODO: Multiple callbacks? Not sure if this is useful...
+/*
+ * Proxy callback that will handle calling the user-specified Python callback
+ */
 int espeak_ng_proxy_callback(short* wave, int num_samples, espeak_EVENT* event)
 {
     // TODO: Does caller own wave lifetime? See if wave is copied in CallFunction
@@ -107,6 +107,10 @@ int espeak_ng_proxy_callback(short* wave, int num_samples, espeak_EVENT* event)
 
     // Callback may be called from non-Python created thread, so
     // ensure to register threads w/ interpretter and acquire the GIL
+    // TODO: In synchronous mode for espeak (not espeak-ng) callback
+    // is run without spawning a new thread (at least in the Homebrew
+    // espeak version) which will cause deadlock if we attempt to
+    // Ensure()
     PyGILState_STATE state = PyGILState_Ensure();
 
     PyObject *wave_py = Py_BuildValue("y#", wave);
@@ -149,8 +153,6 @@ int espeak_ng_proxy_callback(short* wave, int num_samples, espeak_EVENT* event)
     Py_DECREF(wave_py);
     Py_DECREF(num_samples_py);
 
-    PyGILState_Release(state);
-
     // TODO: Check if res_py is NULL?
     if (!PyLong_Check(res_py)) {
 	PyErr_SetString(PyExc_RuntimeError, "espeak_ng_proxy_callback: Callback did not return integer value");
@@ -165,6 +167,8 @@ int espeak_ng_proxy_callback(short* wave, int num_samples, espeak_EVENT* event)
 	// routine is called by C lib directly
         PyErr_SetString(PyExc_TypeError, "espeak_ng_proxy_callback: Could not parse callback integer value");
     }
+
+    PyGILState_Release(state);
 
     return res;
 }
