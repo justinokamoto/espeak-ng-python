@@ -6,9 +6,9 @@
 
 A Python bindings library for the [eSpeak NG](https://github.com/espeak-ng/espeak-ng?tab=readme-ov-file) utility, which is a compact open source software text-to-speech synthesizer with distributions for all major operating systems.
 
-## Supported Platforms
+This library has been tested for the following platforms:
 
-TODO: Matrix
+✅ MacOS Sonoma M1
 
 ## Supported Features
 
@@ -16,21 +16,25 @@ TODO
 
 ## Dependencies
 
-### `espeak` library
+This library provides Python bindings for the underlying `espeak-ng`
+(or `espeak`), so obviously, you must have this library
+installed. Follow instructions below for platform-specific
+instructions.
 
-**Installing MacOS**
+**MacOS (using `brew`)**
 ```
-brew install espeak
+$ brew tap justinokamoto/espeak-ng
+$ brew espeak-ng
 ```
 
 **Linux**
 ```
-apt install espeak
+$ apt install espeak
 ```
 
 ## Installation
 
-After installing dependencies from the above section, you can download this Python package from the Pythin Package Index:
+You can download this Python package from the Pythin Package Index:
 
 TODO: Upload package to PyPI!
 
