@@ -9,7 +9,6 @@ $ python -m runtests
 ```
 """
 
-# TODO: How to run with paths set correctly?
 if __name__ == "__main__":
     loader = unittest.TestLoader()
     suite = loader.discover("tests")

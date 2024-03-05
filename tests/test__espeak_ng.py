@@ -2,7 +2,7 @@ import sys
 import time
 import unittest
 from unittest import mock
-from espeak_ng import espeak_ERROR, espeak_AUDIO_OUTPUT
+from espeak_ng import espeak_AUDIO_OUTPUT
 import _espeak_ng as espeak_ng
 
 

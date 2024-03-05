@@ -8,7 +8,6 @@
 // ***********************************************************
 // Python Type Definitions
 // ***********************************************************
-// TODO: Split into separate .c file?
 
 /*
  * Python wrapper object for espeak_EVENT
@@ -87,8 +86,6 @@ static PyTypeObject ESpeakNgPyEventObjectType = {
 // TODO: To enable Pythonic default args, use static vars here
 
 // TODO: Do parsed params from _Build need to be decremented?
-// TODO: Test...Do default values get overwritten in parsing, even if arg is a
-// keyword with no value provided?
 
 // TODO: Create error enum that can be interpretted
 
@@ -118,7 +115,6 @@ int espeak_ng_proxy_callback(short* wave, int num_samples, espeak_EVENT* event)
     PyObject *num_samples_py = Py_BuildValue("i", num_samples);
     EspeakNgPyEventObject *event_py = PyObject_New(EspeakNgPyEventObject, &ESpeakNgPyEventObjectType);
 
-    // TODO: How does reference counting get handled here?
     // TODO: Extract this building to a separate function
     event_py->type = Py_BuildValue("i", event->type);
     event_py->unique_identifier = Py_BuildValue("I", event->unique_identifier);
@@ -126,13 +122,14 @@ int espeak_ng_proxy_callback(short* wave, int num_samples, espeak_EVENT* event)
     event_py->length = Py_BuildValue("i", event->length);
     event_py->audio_position = Py_BuildValue("i", event->audio_position);
     event_py->sample = Py_BuildValue("i", event->sample);
-    // TODO: How will users ever be able to use this?
+
     if (event->user_data != NULL)
 	event_py->user_data = Py_BuildValue("O", event->user_data);
     else
-	// TODO: Incref?
+	Py_INCREF(Py_None);
 	event_py->user_data = Py_None;
 
+	event_py->id = Py_BuildValue("s", "test");
     if (event->type == espeakEVENT_WORD || event->type == espeakEVENT_SENTENCE)
 	event_py->id = Py_BuildValue("i", event->id.number);
     else if (event->type == espeakEVENT_MARK || event->type == espeakEVENT_PLAY)
@@ -142,20 +139,18 @@ int espeak_ng_proxy_callback(short* wave, int num_samples, espeak_EVENT* event)
 	// TODO: Idk if s# is correct here...
 	event_py->id = Py_BuildValue("#s", event->id.string, 8);
     else {
-	// TODO: Incref?
-	event_py->id = Py_None;	
+	Py_INCREF(Py_None);
+	event_py->id = Py_None;
     }
 
     // Result should be either 0 or 1
     PyObject *res_py = PyObject_CallFunctionObjArgs(SynthCallback, wave_py, num_samples_py, event_py, NULL);
 
-    // TODO: Decrement counts for these arguments???
     Py_DECREF(event_py);
     Py_DECREF(wave_py);
     Py_DECREF(num_samples_py);
 
-    // TODO: Check if res_py is NULL?
-    if (!PyLong_Check(res_py)) {
+    if (res_py == NULL || !PyLong_Check(res_py)) {
 	PyErr_SetString(PyExc_RuntimeError, "espeak_ng_proxy_callback: Callback did not return integer value");
     }
 
@@ -184,12 +179,9 @@ int espeak_ng_proxy_callback(short* wave, int num_samples, espeak_EVENT* event)
 static PyObject *
 espeak_ng_py_Synth(PyObject *self, PyObject *args, PyObject *kwargs)
 {
-    // Python string object (we parse it to get the size)
-    PyObject *text_py;
     // Null-terminated text to be spoken
     const char *text;
     // Equal-or-greater than size of text data
-    // TODO: Get this from the string length
     size_t size = 0;
     // Position to start speaking
     unsigned int position = 0;
@@ -296,9 +288,8 @@ espeak_ng_py_ListVoices(PyObject *sef, PyObject *args)
 					     "age", item->age,
 					     "variant", item->variant);
 	PyList_Append(py_list, voice_list);
-	// TODO: Looks like List doesn't steal reference to
-	// voice_list, so it's decremented here? We should double
-	// check this.
+	// List doesn't steal reference to voice_list, so we decrement
+	// here
 	Py_DECREF(voice_list);
     }
     return py_list; // Caller's responsiblity for decrementing
@@ -324,8 +315,6 @@ espeak_ng_py_Initialize(PyObject *self, PyObject *args, PyObject *kwargs)
 	return NULL; // Throw exception
     }
 
-    // TODO: Make sure this cast is safe! (case switch enums or < >)
-    // TODO: This blows up when another option is set
     int res = espeak_Initialize(output, buflength, path, options);
 
     if (res == -1) {
@@ -346,8 +335,6 @@ espeak_ng_py_Initialize(PyObject *self, PyObject *args, PyObject *kwargs)
 static PyObject *
 espeak_ng_py_SetSynthCallback(PyObject *self, PyObject *args)
 {
-    // TODO: Is it better to make this static (could get wonky though
-    // if PyArg_ doesn't set it every time)
     PyObject *callback = NULL;
 
     if (!PyArg_ParseTuple(args, "O", &callback))
@@ -360,13 +347,10 @@ espeak_ng_py_SetSynthCallback(PyObject *self, PyObject *args)
 
     // TODO: Validate that the callback accepts certain params?
 
-    // TODO: Could this ever be an issue if prev SynthCallback no
-    // longer exists? This cannot be the case though since we hold a
-    // reference here...
     // Store callback
     Py_XDECREF(SynthCallback); // Release borrowed reference
     SynthCallback = callback;
-    Py_IncRef(SynthCallback); // Borrow reference
+    Py_INCREF(SynthCallback); // Borrow reference
 
     Py_RETURN_NONE;
 }

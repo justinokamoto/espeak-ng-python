@@ -59,17 +59,19 @@ espeak_ng.synth("Hello, world.")
 
 #### Asynchronous Mode
 
+
 TODO
 
 ```python
-# Set callback to some user-defined callback function
-# with the following signature, where the return value
-# is 0 on success and 1 on failure:
-
 def my_callback_func(wave: bytes, num_samples: int, event: espeak_ng.Event) -> int:
   # ... my code here
   return 0
 
+# Initialize the espeak library in an asynchronous output mode
+espeak_ng.initialize(output=espeak_AUDIO_OUTPUT.AUDIO_OUTPUT_PLAYBACK)
+
+# This function will return immediately and the callback will be triggered as the synthesis
+progresses
 espeak_ng.set_synth_callback(my_callback_func)
 ```
 
@@ -96,20 +98,4 @@ To build a local distribution archive, run:
 
 ```
 pip wheel .
-```
-
-
------------------------------
-
-* TODO: Static link for portability (better than the other implementation)
-* TODO: emacs dired configurations for building and lsp stuff
-* TODO: Need __init__.py to implement all defaults
-* TODO: WAV support
-* TODO: Explain in docs that submodule is to retrieve headers
-* TODO: Docstrings
-* TODO: Try installing and running MacOS and Linux, then upload to PyPI
-* TODO: Describe the different responsibilities of \_espeak\_ng and espeak\_ng
-
-```
-install_name_tool -change /usr/lib/libpcaudio.0.dylib /usr/local/lib/libpcaudio.0.dylib /Users/justin/workspaces/espeak-ng-python/espeak-ng/src/.libs/espeak-ng
 ```

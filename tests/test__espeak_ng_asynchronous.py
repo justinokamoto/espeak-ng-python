@@ -1,15 +1,12 @@
 import queue
 import sys
-import time # TODO: Remove
 import threading
 import unittest
 from unittest import mock
 import warnings
-from espeak_ng import espeak_ERROR, espeak_AUDIO_OUTPUT
+from espeak_ng import espeak_AUDIO_OUTPUT
 import _espeak_ng as espeak_ng
 
-# TODO: Does the lifetime of a function change if refcount is increased? Or do we need to have:
-# if (SynthCallback == NULL || Py_REFCNT(SynthCallback) == 0)?
 
 def dummy_callback_wrapper(queue):
     def dummy_callback(wave, num_samples, event):
@@ -22,6 +19,7 @@ def dummy_callback_wrapper(queue):
         return 0
     
     return dummy_callback
+
 
 class Test__EspeakNg_Asynchronous(unittest.TestCase):
     def setUp(self):
