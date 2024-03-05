@@ -32,7 +32,7 @@ extension = Extension("_espeak_ng",
 
 setup(
     name="espeak-ng-python",
-    version="1.0.4",
+    version="1.0.5",
     author="Justin Okamoto",
     description="Python wrapper for espeak-ng.",
     long_description=open("README.md", "r", encoding="utf-8").read(),
