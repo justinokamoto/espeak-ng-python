@@ -2,7 +2,7 @@
 #define PY_SSIZE_T_CLEAN
 #include <Python.h>
 
-#include "espeak/speak_lib.h"
+#include "espeak-ng/speak_lib.h"
 
 
 // ***********************************************************

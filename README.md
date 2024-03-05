@@ -2,9 +2,13 @@
 
 A Python bindings library for the [eSpeak NG](https://github.com/espeak-ng/espeak-ng?tab=readme-ov-file) utility, which is a compact open source software text-to-speech synthesizer with distributions for all major operating systems.
 
-This library has been tested for the following platforms:
+Platform support:
 
-✅ MacOS arm64 (Apple Silicon)
+| Support | Platform | Architecture | Notes                       |
+|---------|----------|--------------|-----------------------------|
+| ✅      | MacOS    | arm64        | Tested with M1              |
+| ✅      | Linux    | arm64        | Tested with Debian (Ubuntu) |
+|         |          |              |                             |
 
 ## Dependencies
 
@@ -23,7 +27,8 @@ $ brew install espeak-ng
 **Debian (Ubuntu)**
 
 ```
-$ apt install libespeak-ng-dev
+# Install espeak library and headers, along with CPython C API headers
+$ apt install libespeak-ng-dev python3-dev
 ```
 
 ## Installation
