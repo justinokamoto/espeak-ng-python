@@ -39,11 +39,7 @@ class Test__EspeakNg_Asynchronous(unittest.TestCase):
         # Set dummy callback that uses queue
         espeak_ng.set_synth_callback(dummy_callback_wrapper(synth_queue))
         # Attempt synthesis
-        res = espeak_ng.synth(text_to_synthesize, len(text_to_synthesize))
-        # Verify synthesis returns successfully
-        assert res == espeak_ERROR.EE_OK, \
-            f"Expected {espeak_ERROR.EE_OK.name} but received {espeak_ERROR(res).name}"
-
+        espeak_ng.synth(text_to_synthesize, len(text_to_synthesize))
         # Wait for callback to send 'sentinel' object to signify synth
         # completed successfully
         synth_queue.get(timeout=3)

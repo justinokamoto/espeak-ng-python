@@ -1,3 +1,4 @@
+#include <string.h>
 #define PY_SSIZE_T_CLEAN
 #include <Python.h>
 
@@ -183,10 +184,13 @@ int espeak_ng_proxy_callback(short* wave, int num_samples, espeak_EVENT* event)
 static PyObject *
 espeak_ng_py_Synth(PyObject *self, PyObject *args, PyObject *kwargs)
 {
+    // Python string object (we parse it to get the size)
+    PyObject *text_py;
     // Null-terminated text to be spoken
     const char *text;
     // Equal-or-greater than size of text data
-    size_t size; // TODO: Get this from the string length
+    // TODO: Get this from the string length
+    size_t size = 0;
     // Position to start speaking
     unsigned int position = 0;
     // Determines whether 'position' denotes chars, words, or
@@ -204,19 +208,37 @@ espeak_ng_py_Synth(PyObject *self, PyObject *args, PyObject *kwargs)
 				   "flags", "unique_identifier", "user_data", NULL};
 
     // Use 'n' instead of 'I' since (on Darwin) size_t is unsigned long long
-    if (!PyArg_ParseTupleAndKeywords(args, kwargs, "sn|IiIIOO", kwlist,
+    if (!PyArg_ParseTupleAndKeywords(args, kwargs, "s|nIiIIOO", kwlist,
 				     &text, &size, &position, &position_type, &end_position,
 				     &flags, &unique_identifier, &user_data)) {
 	return NULL; // Throw exception (it's already set)
     }
 
+    // If no size provided, default to the length of the text.
+    if (size == 0)
+	size = strlen(text);
+
     int res = espeak_Synth(text, size, position, POS_CHARACTER, end_position,
 			   flags | espeakCHARS_AUTO, unique_identifier, (void *) user_data);
 
-    // Returns espeak_ERROR code
-    // TODO: Python wrapper module should parse to enum
-    PyObject *res_py = Py_BuildValue("i", res); // Caller responsible for decrementing
-    return res_py;
+    switch (res) {
+    case EE_OK:
+	break;
+    case EE_INTERNAL_ERROR:
+	PyErr_SetString(PyExc_RuntimeError, "espeak_ng_py_Synth: espeak-ng returned EE_INTERNAL_ERROR");
+	return NULL; // Throw exception
+    case EE_BUFFER_FULL:
+	PyErr_SetString(PyExc_RuntimeError, "espeak_ng_py_Synth: espeak-ng returned EE_BUFFER_FULL");
+	return NULL;
+    case EE_NOT_FOUND:
+	PyErr_SetString(PyExc_RuntimeError, "espeak_ng_py_Synth: espeak-ng returned EE_NOT_FOUND");
+	return NULL;
+    default:
+	PyErr_SetString(PyExc_RuntimeError, "espeak_ng_py_Synth: espeak-ng returned unknown error code");
+	return NULL;
+    }
+
+    Py_RETURN_NONE;
 }
 
 /*
@@ -306,17 +328,16 @@ espeak_ng_py_Initialize(PyObject *self, PyObject *args, PyObject *kwargs)
     // TODO: This blows up when another option is set
     int res = espeak_Initialize(output, buflength, path, options);
 
-    // res is either sample rate in Hz, or -1 (EE_INTERNAL_ERROR)
-    if (res != -1) {
-	espeak_SetSynthCallback(espeak_ng_proxy_callback);
-
-	// Returns sampling rate in Hz
-	PyObject *res_py = Py_BuildValue("i", res); // Caller responsible for decrementing
-	return res_py;
-    } else {
-	PyObject *res_py = Py_BuildValue("i", res); // Caller responsible for decrementing
-	return res_py;
+    if (res == -1) {
+	PyErr_SetString(PyExc_RuntimeError, "espeak_ng_py_Initialize: espeak-ng returned EE_INTERNAL_ERROR");
+	return NULL; // Throw exception
     }
+    // res is sample rate in Hz
+    espeak_SetSynthCallback(espeak_ng_proxy_callback);
+
+    // Returns sampling rate in Hz
+    PyObject *res_py = Py_BuildValue("i", res); // Caller responsible for decrementing
+    return res_py;
 }
 
 /*

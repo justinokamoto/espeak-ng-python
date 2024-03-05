@@ -47,11 +47,6 @@ class Test__EspeakNg(unittest.TestCase):
         text_to_synthesize = "test synth"
 
         res = espeak_ng.synth(text_to_synthesize, len(text_to_synthesize))
-
-        # Assert synth works
-        assert res == espeak_ERROR.EE_OK, \
-            f"Expected {espeak_ERROR.EE_OK.name} but received {espeak_ERROR(res).name}"
-
         # TODO: Test unique_identifier and user_data
 
     def test_proxy_callback(self):
