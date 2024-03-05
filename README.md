@@ -27,7 +27,7 @@ $ brew install espeak-ng
 **Debian (Ubuntu)**
 
 ```
-# Install espeak library and headers, along with CPython C API headers
+# Install espeak library and headers, along with Python's C API headers
 $ apt install libespeak-ng-dev python3-dev
 ```
 
@@ -36,8 +36,6 @@ $ apt install libespeak-ng-dev python3-dev
 Provided you have installed the required dependencies described from
 the previous section, you can download this Python package from the
 Pythin Package Index:
-
-TODO: Upload package to PyPI!
 
 ```
 $ pip install espeak-ng-python
