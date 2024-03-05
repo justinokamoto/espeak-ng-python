@@ -61,7 +61,7 @@ static PyGetSetDef EspeakNgPyEventObject_getsetters[] = {
 };
 
 // TODO: Need an init method that sets attributes to None (to avoid
-// crashes if other modules attempt to use Event class)
+// crashes if other modules attempt to instantiate Event class)
 /*
  * Create new Python type '_espeak_ng.Event'
  */
@@ -80,14 +80,7 @@ static PyTypeObject ESpeakNgPyEventObjectType = {
 // Helper functions
 // ***********************************************************
 
-// Remember: Parsed arguments are BORROWED, so we don't decrement them
-// https://docs.python.org/3/c-api/arg.html
-
 // TODO: To enable Pythonic default args, use static vars here
-
-// TODO: Do parsed params from _Build need to be decremented?
-
-// TODO: Create error enum that can be interpretted
 
 // Python function handle to be executed during synthesization
 static PyObject *SynthCallback = NULL;

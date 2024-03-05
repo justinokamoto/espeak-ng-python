@@ -8,11 +8,7 @@ A Python bindings library for the [eSpeak NG](https://github.com/espeak-ng/espea
 
 This library has been tested for the following platforms:
 
-✅ MacOS Sonoma M1
-
-## Supported Features
-
-TODO
+✅ MacOS arm64 (Apple Silicon)
 
 ## Dependencies
 
@@ -46,6 +42,16 @@ pip install espeak-ng-python
 
 ## Usage
 
+For all functions that this library wraps, it provides a near 1-to-1
+wrapper interface, where all parameters are provided with identical
+names. Only difference being that wrapper functions throw exceptions
+rather than returning error codes (which is the more 'Pythonic' way of
+error handling).
+
+For more in-depth documentation you can read the comments within the
+extension source code here:
+[src/espeak\_ng/extension/\_espeakngmodule.c](https://github.com/justinokamoto/espeak-ng-python/blob/main/src/espeak_ng/extension/_espeakngmodule.c)
+
 ### Quick Start
 
 ```python
@@ -59,8 +65,8 @@ espeak_ng.synth("Hello, world.")
 
 #### Asynchronous Mode
 
-
-TODO
+`espeak` offers a async interface. Below is an example snippet using
+this interface:
 
 ```python
 def my_callback_func(wave: bytes, num_samples: int, event: espeak_ng.Event) -> int:
@@ -77,7 +83,19 @@ espeak_ng.set_synth_callback(my_callback_func)
 
 ### Configuration
 
-TODO
+`espeak` supports various languages. To see all available options, you can list all voices:
+
+```python
+espeak_ng.list_voices()
+```
+
+To configure the voice, you can use the `set_voice_by_properties` function. Examples below:
+
+```python
+espeak_ng.set_voice_by_properties(name="en-us")
+espeak_ng.set_voice_by_properties(gender=1)
+espeak_ng.set_voice_by_properties(age=30)
+```
 
 ## Building Locally
 
