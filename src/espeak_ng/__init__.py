@@ -1,3 +1,5 @@
+from _espeak_ng import *
+
 from enum import IntEnum
 
 

@@ -14,14 +14,16 @@ installed. Follow instructions below for platform-specific
 instructions.
 
 **MacOS (using `brew`)**
+
 ```
 $ brew tap justinokamoto/espeak-ng
 $ brew install espeak-ng
 ```
 
-**Linux**
+**Debian (Ubuntu)**
+
 ```
-$ apt install espeak
+$ apt install libespeak-ng-dev
 ```
 
 ## Installation
