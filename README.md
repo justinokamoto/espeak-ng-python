@@ -27,7 +27,7 @@ $ brew install espeak-ng
 **Debian (Ubuntu)**
 
 ```
-# Install espeak library and headers, along with Python's C API headers
+# Install espeak-ng library and headers, along with Python's C API headers
 $ apt install libespeak-ng-dev python3-dev
 ```
 
@@ -69,7 +69,7 @@ espeak_ng.synth("Hello, world.")
 
 #### Asynchronous Mode
 
-`espeak` offers a async interface. Below is an example snippet using
+`espeak-ng` offers a async interface. Below is an example snippet using
 this interface:
 
 ```python
@@ -90,7 +90,7 @@ espeak_ng.set_synth_callback(my_callback_func)
 
 #### Configuration
 
-`espeak` supports various languages. To see all available options, you can list all voices:
+`espeak-ng` supports various languages. To see all available options, you can list all voices:
 
 ```python
 import espeak_ng
