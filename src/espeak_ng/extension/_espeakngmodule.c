@@ -137,6 +137,7 @@ int espeak_ng_proxy_callback(short* wave, int num_samples, espeak_EVENT* event)
     }
 
     // Result should be either 0 or 1
+    // TODO: We should probably hide the need to return a value from users
     PyObject *res_py = PyObject_CallFunctionObjArgs(SynthCallback, wave_py, num_samples_py, event_py, NULL);
 
     Py_DECREF(event_py);
@@ -144,7 +145,7 @@ int espeak_ng_proxy_callback(short* wave, int num_samples, espeak_EVENT* event)
     Py_DECREF(num_samples_py);
 
     if (res_py == NULL || !PyLong_Check(res_py)) {
-	PyErr_SetString(PyExc_RuntimeError, "espeak_ng_proxy_callback: Callback did not return integer value");
+	PyErr_SetString(PyExc_RuntimeError, "espeak_ng_proxy_callback: Callback did not return integer value. Remember callback should return 0 on success.");
     }
 
     // Convert the Python integer return code to C int
@@ -154,7 +155,7 @@ int espeak_ng_proxy_callback(short* wave, int num_samples, espeak_EVENT* event)
     if (res == -1 && PyErr_Occurred()) {
 	// TODO: What happens when error occurs in async mode? This
 	// routine is called by C lib directly
-        PyErr_SetString(PyExc_TypeError, "espeak_ng_proxy_callback: Could not parse callback integer value");
+        PyErr_SetString(PyExc_TypeError, "espeak_ng_proxy_callback: Could not parse callback integer value. Remember callback should return 0 on success.");
     }
 
     PyGILState_Release(state);

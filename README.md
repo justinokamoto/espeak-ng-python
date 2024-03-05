@@ -75,6 +75,7 @@ this interface:
 ```python
 import espeak_ng
 
+# NOTE: It's important to return 0 on success, otherwise synthesis will stop
 def my_callback_func(wave: bytes, num_samples: int, event: espeak_ng.Event) -> int:
   # ... my code here
   return 0
