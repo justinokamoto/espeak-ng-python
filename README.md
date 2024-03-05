@@ -16,7 +16,7 @@ instructions.
 **MacOS (using `brew`)**
 ```
 $ brew tap justinokamoto/espeak-ng
-$ brew espeak-ng
+$ brew install espeak-ng
 ```
 
 **Linux**
@@ -33,7 +33,7 @@ Pythin Package Index:
 TODO: Upload package to PyPI!
 
 ```
-pip install espeak-ng-python
+$ pip install espeak-ng-python
 ```
 
 ## Usage
@@ -68,6 +68,8 @@ espeak_ng.synth("Hello, world.")
 this interface:
 
 ```python
+import espeak_ng
+
 def my_callback_func(wave: bytes, num_samples: int, event: espeak_ng.Event) -> int:
   # ... my code here
   return 0
@@ -85,12 +87,16 @@ espeak_ng.set_synth_callback(my_callback_func)
 `espeak` supports various languages. To see all available options, you can list all voices:
 
 ```python
+import espeak_ng
+
 espeak_ng.list_voices()
 ```
 
 To configure the voice, you can use the `set_voice_by_properties` function. Examples below:
 
 ```python
+import espeak_ng
+
 espeak_ng.set_voice_by_properties(name="en-us")
 espeak_ng.set_voice_by_properties(gender=1)
 espeak_ng.set_voice_by_properties(age=30)
@@ -102,17 +108,17 @@ Install dependencies from the above "Dependencies" section. Then build this pack
 
 ```
 # Use pip to build in development (`-e` is for 'editable install')
-pip install -e .
+$ pip install -e .
 ```
 
 To run tests, use the helper `runtests` script:
 
 ```
-python3 -m runtests
+$ python3 -m runtests
 ```
 
 To build a local distribution archive, run:
 
 ```
-pip wheel .
+$ pip wheel .
 ```
