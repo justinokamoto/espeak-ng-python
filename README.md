@@ -1,5 +1,7 @@
 # espeak-ng
 
+[![PyPI version](https://badge.fury.io/py/espeak-ng-python.svg)](https://badge.fury.io/py/espeak-ng-python)
+
 A Python bindings library for the [eSpeak NG](https://github.com/espeak-ng/espeak-ng?tab=readme-ov-file) utility, which is a compact open source software text-to-speech synthesizer with distributions for all major operating systems.
 
 Platform support:
