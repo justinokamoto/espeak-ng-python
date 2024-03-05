@@ -6,7 +6,7 @@ from espeak_ng import espeak_AUDIO_OUTPUT
 import _espeak_ng as espeak_ng
 
 
-def dummy_callback(wave, num_samples, event):
+def dummy_callback(wav, num_samples, event):
     return 0
 
 class Test__EspeakNg(unittest.TestCase):
@@ -66,7 +66,7 @@ class Test__EspeakNg(unittest.TestCase):
         mock_callback.assert_called()
 
     def test_proxy_callback_parsing_event(self):
-        def callback(wave, num_samples, event):
+        def callback(wav, num_samples, event):
             # Assert all attributes are populated with expected types
             assert isinstance(event.type, int)
             assert isinstance(event.unique_identifier, int)

@@ -88,9 +88,9 @@ static PyObject *SynthCallback = NULL;
 /*
  * Proxy callback that will handle calling the user-specified Python callback
  */
-int espeak_ng_proxy_callback(short* wave, int num_samples, espeak_EVENT* event)
+int espeak_ng_proxy_callback(short* wav, int num_samples, espeak_EVENT* event)
 {
-    // TODO: Does caller own wave lifetime? See if wave is copied in CallFunction
+    // TODO: Does caller own wav lifetime? See if wav is copied in CallFunction
 
     // TODO: short to char doesn't matter since it's all bytes, right?
     if (SynthCallback == NULL)
@@ -104,7 +104,7 @@ int espeak_ng_proxy_callback(short* wave, int num_samples, espeak_EVENT* event)
     // Ensure()
     PyGILState_STATE state = PyGILState_Ensure();
 
-    PyObject *wave_py = Py_BuildValue("y#", wave);
+    PyObject *wav_py = Py_BuildValue("y#", wav, num_samples);
     PyObject *num_samples_py = Py_BuildValue("i", num_samples);
     EspeakNgPyEventObject *event_py = PyObject_New(EspeakNgPyEventObject, &ESpeakNgPyEventObjectType);
 
@@ -138,10 +138,10 @@ int espeak_ng_proxy_callback(short* wave, int num_samples, espeak_EVENT* event)
 
     // Result should be either 0 or 1
     // TODO: We should probably hide the need to return a value from users
-    PyObject *res_py = PyObject_CallFunctionObjArgs(SynthCallback, wave_py, num_samples_py, event_py, NULL);
+    PyObject *res_py = PyObject_CallFunctionObjArgs(SynthCallback, wav_py, num_samples_py, event_py, NULL);
 
     Py_DECREF(event_py);
-    Py_DECREF(wave_py);
+    Py_DECREF(wav_py);
     Py_DECREF(num_samples_py);
 
     if (res_py == NULL || !PyLong_Check(res_py)) {

@@ -9,8 +9,8 @@ import _espeak_ng as espeak_ng
 
 
 def dummy_callback_wrapper(queue):
-    def dummy_callback(wave, num_samples, event):
-        if not wave:
+    def dummy_callback(wav, num_samples, event):
+        if not wav:
             # TODO: We can't use threading.Condition here b/c segfault
             # occurs when non-Python thread tries to `notify` threads
             # using condition variable

@@ -2,6 +2,9 @@ from espeak_ng import espeak_AUDIO_OUTPUT
 import espeak_ng
 import time
 
+"""
+Simple 'hello world' example.
+"""
 
 def main():
     text_to_synthesize = "Hello, world!"
