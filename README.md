@@ -1,7 +1,3 @@
-> [!CAUTION]
-> This project is still in active development and is minimally functional.
-
-
 # espeak-ng
 
 A Python bindings library for the [eSpeak NG](https://github.com/espeak-ng/espeak-ng?tab=readme-ov-file) utility, which is a compact open source software text-to-speech synthesizer with distributions for all major operating systems.
@@ -54,12 +50,15 @@ extension source code here:
 
 ### Quick Start
 
+#### Synchronous Mode
+
 ```python
 import espeak_ng
 
 # Initialize the espeak library
 espeak_ng.initialize()
 
+# This function will return after synthesis is complete
 espeak_ng.synth("Hello, world.")
 ```
 
@@ -81,7 +80,7 @@ progresses
 espeak_ng.set_synth_callback(my_callback_func)
 ```
 
-### Configuration
+#### Configuration
 
 `espeak` supports various languages. To see all available options, you can list all voices:
 
