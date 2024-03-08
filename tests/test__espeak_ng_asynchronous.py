@@ -6,18 +6,18 @@ from unittest import mock
 import warnings
 from espeak_ng import espeak_AUDIO_OUTPUT
 import _espeak_ng as espeak_ng
+import threading
 
 
-def dummy_callback_wrapper(queue):
+def dummy_callback_wrapper(condition):
     def dummy_callback(wav, num_samples, event):
+        # If wav is None, then synth has finished and we must notify
+        # the main thread that it can complete
         if not wav:
-            # TODO: We can't use threading.Condition here b/c segfault
-            # occurs when non-Python thread tries to `notify` threads
-            # using condition variable
-            if queue:
-                queue.put(None) # Send sentinel object
+            if condition:
+                with condition:
+                    condition.notify()
         return 0
-    
     return dummy_callback
 
 
@@ -31,13 +31,13 @@ class Test__EspeakNg_Asynchronous(unittest.TestCase):
 
     def test_asynchronous_mode(self):
         text_to_synthesize = "test proxy"
-        # Queue to be used as a notification mechanism for when
-        # callback is called
-        synth_queue = queue.Queue()
+        # Create condition used to notify this main thread that
+        # synthesis has completed
+        condition = threading.Condition()
         # Set dummy callback that uses queue
-        espeak_ng.set_synth_callback(dummy_callback_wrapper(synth_queue))
-        # Attempt synthesis
-        espeak_ng.synth(text_to_synthesize, len(text_to_synthesize))
-        # Wait for callback to send 'sentinel' object to signify synth
-        # completed successfully
-        synth_queue.get(timeout=3)
+        espeak_ng.set_synth_callback(dummy_callback_wrapper(condition))
+
+        with condition:
+            # Attempt synthesis
+            espeak_ng.synth(text_to_synthesize, len(text_to_synthesize))
+            condition.wait()
