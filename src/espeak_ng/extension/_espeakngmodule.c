@@ -349,6 +349,29 @@ espeak_ng_py_SetSynthCallback(PyObject *self, PyObject *args)
     Py_RETURN_NONE;
 }
 
+static PyObject *
+espeak_ng_py_TextToPhonemes(PyObject *self, PyObject *args, PyObject *kwargs)
+{
+    const char *text;
+    int textmode = espeakCHARS_AUTO;
+    int phonememode = espeakPHONEMES_IPA;
+
+    static const char *kwlist[] = {"text", "textmode", "phonememode", NULL};
+
+    if (!PyArg_ParseTupleAndKeywords(args, kwargs, "s|ii", kwlist,
+                                     &text, &textmode, &phonememode))
+        return NULL;
+
+    const char *phonemes = espeak_TextToPhonemes((const void **)&text, textmode, phonememode);
+
+    if (phonemes == NULL) {
+        PyErr_SetString(PyExc_RuntimeError, "espeak_TextToPhonemes returned NULL");
+        return NULL;
+    }
+
+    return Py_BuildValue("s", phonemes);
+}
+
 // ***********************************************************
 // Python Module
 // ***********************************************************
@@ -360,6 +383,7 @@ static PyMethodDef EspeakNgMethods[] = {
     {"set_synth_callback", espeak_ng_py_SetSynthCallback, METH_VARARGS, "set synth callback"},
     {"synth", espeak_ng_py_Synth, METH_VARARGS | METH_KEYWORDS, "synthesize text to speech"},
     {"list_voices", espeak_ng_py_ListVoices, METH_VARARGS, "list all available voices"},
+    {"text_to_phonemes", espeak_ng_py_TextToPhonemes, METH_VARARGS | METH_KEYWORDS, "convert text to IPA phonemes"},
     {NULL, NULL, 0, NULL} // Sentinel
 };
 
